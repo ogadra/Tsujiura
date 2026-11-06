@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 const token = "550e8400-e29b-41d4-a716-446655440000"
@@ -72,5 +75,29 @@ func TestRespondNamesHangingDatabase(t *testing.T) {
 	}
 	if want := `{"unavailable":["Firestore"]}`; string(body) != want {
 		t.Errorf("body = %s, want %s", body, want)
+	}
+}
+
+func TestDynamoDBHas(t *testing.T) {
+	item := map[string]types.AttributeValue{"token": &types.AttributeValueMemberS{Value: token}}
+	tests := []struct {
+		name string
+		item map[string]types.AttributeValue
+		err  error
+		want bool
+	}{{"found", item, nil, true}, {"missing", nil, nil, false}, {"failed read", nil, errors.New("read failed"), false}}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			getItem := func(_ context.Context, in *dynamodb.GetItemInput, _ ...func(*dynamodb.Options)) (*dynamodb.GetItemOutput, error) {
+				if key := in.Key["token"].(*types.AttributeValueMemberS).Value; key != token || *in.TableName != "results" {
+					t.Errorf("read %s from %s", key, *in.TableName)
+				}
+				return &dynamodb.GetItemOutput{Item: tt.item}, tt.err
+			}
+			got, err := DynamoDB{GetItem: getItem, Table: "results"}.Has(context.Background(), token)
+			if got != tt.want || !errors.Is(err, tt.err) {
+				t.Errorf("got %v, %v, want %v, %v", got, err, tt.want, tt.err)
+			}
+		})
 	}
 }
