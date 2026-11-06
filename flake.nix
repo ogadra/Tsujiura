@@ -33,7 +33,7 @@
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           awscli2
-          dnsutils
+          dig
           go
           google-cloud-sdk
           jq
