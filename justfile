@@ -65,3 +65,23 @@ deploy-ingest-cloud-dns: _validate-tf-backend-bucket
       --no-allow-unauthenticated \
       --retry \
       --set-env-vars=FIRESTORE_COLLECTION=results,ASN_DB_PATH=serverless_function_source_code/GeoLite2-ASN.mmdb
+
+# Needs `just init google-cloud` for the outputs.
+deploy-result-api-google-cloud: _validate-tf-backend-bucket
+    #!/usr/bin/env bash
+    set -euo pipefail
+    service_account="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
+    # Go functions must sit at the module root, so stage the package there under the same module path.
+    source_dir="$(mktemp -d)"
+    trap 'rm -rf "$source_dir"' EXIT
+    cp -r go.mod go.sum internal functions/result-api/. "$source_dir"
+    gcloud functions deploy tsujiura-result-api \
+      --gen2 \
+      --region=asia-northeast1 \
+      --runtime=go125 \
+      --source="$source_dir" \
+      --entry-point=ResultAPI \
+      --trigger-http \
+      --service-account="$service_account" \
+      --no-allow-unauthenticated \
+      --set-env-vars=FIRESTORE_COLLECTION=results
