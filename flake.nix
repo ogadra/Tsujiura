@@ -33,8 +33,10 @@
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           awscli2
+          dnsutils
           go
           google-cloud-sdk
+          jq
           just
           lambroll
           lefthook
