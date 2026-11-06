@@ -11,11 +11,12 @@ resource "google_firestore_database" "main" {
   depends_on = [google_project_service.firestore]
 }
 
-resource "google_firestore_field" "results_expire_at" {
+resource "google_firestore_field" "results_expires_at" {
   database   = google_firestore_database.main.name
   collection = "results"
-  field      = "expire_at"
+  field      = "expiresAt"
 
+  # The ingest function writes expiresAt as a timestamp, one day after the query.
   ttl_config {}
 
   # TTL field does not need single-field indexes.
