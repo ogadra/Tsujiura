@@ -1,0 +1,18 @@
+{
+  "FunctionName": "tsujiura-ingest-route53",
+  "Role": "{{ tfstate `aws_iam_role.ingest_route53.arn` }}",
+  "PackageType": "Image",
+  "Code": {
+    "ImageUri": "{{ tfstate `aws_ecr_repository.ingest_route53.repository_url` }}:{{ must_env `IMAGE_TAG` }}"
+  },
+  "Architectures": ["x86_64"],
+  "MemorySize": 128,
+  "Timeout": 30,
+  "Environment": {
+    "Variables": {
+      "RESULTS_TABLE_NAME": "{{ tfstate `aws_dynamodb_table.results.name` }}",
+      "RESULTS_TABLE_REGION": "ap-northeast-1",
+      "ASN_DB_PATH": "/var/task/GeoLite2-ASN.mmdb"
+    }
+  }
+}
