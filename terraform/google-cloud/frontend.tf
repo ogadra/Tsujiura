@@ -54,6 +54,21 @@ resource "google_compute_backend_bucket" "frontend" {
 resource "google_compute_url_map" "frontend" {
   name            = "tsujiura-frontend"
   default_service = google_compute_backend_bucket.frontend.id
+
+  host_rule {
+    hosts        = ["*"]
+    path_matcher = "frontend"
+  }
+
+  path_matcher {
+    name            = "frontend"
+    default_service = google_compute_backend_bucket.frontend.id
+
+    path_rule {
+      paths   = ["/api/result"]
+      service = google_compute_backend_service.result_api.id
+    }
+  }
 }
 
 resource "google_compute_global_address" "frontend" {
