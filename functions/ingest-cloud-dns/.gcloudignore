@@ -1,0 +1,3 @@
+*_test.go
+# Git ignores the ASN database, but the function reads it at runtime.
+!*.mmdb
