@@ -9,6 +9,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
@@ -79,4 +82,22 @@ func (a Aggregator) Respond(ctx context.Context, token string) (int, []byte) {
 func encode(status int, body any) (int, []byte) {
 	encoded, _ := json.Marshal(body)
 	return status, encoded
+}
+
+// DynamoDB reads the Route53 records from a table keyed by token.
+type DynamoDB struct {
+	GetItem func(context.Context, *dynamodb.GetItemInput, ...func(*dynamodb.Options)) (*dynamodb.GetItemOutput, error)
+	Table   string
+}
+
+// Has implements Reader.
+func (d DynamoDB) Has(ctx context.Context, token string) (bool, error) {
+	out, err := d.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String(d.Table),
+		Key:       map[string]types.AttributeValue{"token": &types.AttributeValueMemberS{Value: token}},
+	})
+	if err != nil {
+		return false, err
+	}
+	return len(out.Item) > 0, nil
 }
