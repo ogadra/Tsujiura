@@ -31,16 +31,30 @@ deploy-ingest-route53: _validate-tf-backend-bucket
     docker push "$repository:$IMAGE_TAG"
     lambroll deploy --function lambda/ingest-route53/function.json --region us-east-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
 
-# Needs `just init aws` for the repository URL.
+# Needs `just init aws` for the repository URL and `just init google-cloud` for the Firestore access.
 deploy-result-api: _validate-tf-backend-bucket
     #!/usr/bin/env bash
     set -euo pipefail
     repository="$(terraform -chdir=terraform/aws output -raw result_api_repository_url)"
+    export GOOGLE_CLOUD_PROJECT="$(terraform -chdir=terraform/google-cloud output -raw project_id)"
+    export GOOGLE_WORKLOAD_IDENTITY_AUDIENCE="$(terraform -chdir=terraform/google-cloud output -raw result_api_workload_identity_audience)"
+    export GOOGLE_SERVICE_ACCOUNT="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
     export IMAGE_TAG="$(git rev-parse --short HEAD)"
     aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${repository%%/*}"
     docker build --platform linux/amd64 --provenance=false -f lambda/result-api/Dockerfile -t "$repository:$IMAGE_TAG" .
     docker push "$repository:$IMAGE_TAG"
     lambroll deploy --function lambda/result-api/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
+
+# Needs `just init aws` for the repository URL.
+deploy-frontend: _validate-tf-backend-bucket
+    #!/usr/bin/env bash
+    set -euo pipefail
+    repository="$(terraform -chdir=terraform/aws output -raw frontend_repository_url)"
+    export IMAGE_TAG="$(git rev-parse --short HEAD)"
+    aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${repository%%/*}"
+    docker build --platform linux/amd64 --provenance=false -f lambda/frontend/Dockerfile -t "$repository:$IMAGE_TAG" .
+    docker push "$repository:$IMAGE_TAG"
+    lambroll deploy --function lambda/frontend/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
 
 # Needs `just geolite2-asn` for the database and `just init google-cloud` for the outputs.
 deploy-ingest-cloud-dns: _validate-tf-backend-bucket
@@ -84,5 +98,6 @@ deploy-result-api-google-cloud: _validate-tf-backend-bucket
       --entry-point=ResultAPI \
       --trigger-http \
       --service-account="$service_account" \
-      --no-allow-unauthenticated \
+      --allow-unauthenticated \
+      --ingress-settings=internal-and-gclb \
       --set-env-vars=FIRESTORE_COLLECTION=results,RESULTS_TABLE_NAME=tsujiura-results,RESULTS_TABLE_REGION=ap-northeast-1,RESULTS_TABLE_ROLE_ARN="$role_arn"
