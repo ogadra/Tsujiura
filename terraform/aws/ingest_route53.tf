@@ -33,6 +33,11 @@ resource "aws_iam_role_policy" "ingest_route53" {
   policy = data.aws_iam_policy_document.ingest_route53.json
 }
 
+resource "aws_iam_role_policy_attachment" "ingest_route53_logs" {
+  role       = aws_iam_role.ingest_route53.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 # lambroll owns the function, so it must be deployed before this can be read.
 data "aws_lambda_function" "ingest_route53" {
   provider = aws.use1
