@@ -22,3 +22,8 @@ variable "budget_notification_emails" {
   description = "Email addresses notified when the budget threshold is exceeded"
   type        = set(string)
 }
+
+variable "result_api_assumed_role_arn" {
+  description = "STS assumed role ARN of the AWS result API, from the result_api_assumed_role_arn output of terraform/aws"
+  type        = string
+}

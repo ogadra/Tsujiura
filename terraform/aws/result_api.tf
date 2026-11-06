@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_ecr_repository" "result_api" {
   name = "tsujiura-result-api"
 }
@@ -27,4 +29,9 @@ resource "aws_iam_role_policy_attachment" "result_api_logs" {
 
 output "result_api_repository_url" {
   value = aws_ecr_repository.result_api.repository_url
+}
+
+# terraform/google-cloud takes this as result_api_assumed_role_arn.
+output "result_api_assumed_role_arn" {
+  value = "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/${aws_iam_role.result_api.name}"
 }

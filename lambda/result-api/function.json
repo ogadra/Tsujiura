@@ -10,7 +10,11 @@
   "Timeout": 10,
   "Environment": {
     "Variables": {
-      "RESULTS_TABLE_NAME": "{{ tfstate `aws_dynamodb_table.results.name` }}"
+      "RESULTS_TABLE_NAME": "{{ tfstate `aws_dynamodb_table.results.name` }}",
+      "FIRESTORE_COLLECTION": "results",
+      "GOOGLE_CLOUD_PROJECT": "{{ must_env `GOOGLE_CLOUD_PROJECT` }}",
+      "GOOGLE_WORKLOAD_IDENTITY_AUDIENCE": "{{ must_env `GOOGLE_WORKLOAD_IDENTITY_AUDIENCE` }}",
+      "GOOGLE_SERVICE_ACCOUNT": "{{ must_env `GOOGLE_SERVICE_ACCOUNT` }}"
     }
   }
 }
