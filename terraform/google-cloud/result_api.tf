@@ -20,3 +20,7 @@ resource "google_project_iam_member" "result_api_firestore" {
 output "result_api_service_account" {
   value = google_service_account.result_api.email
 }
+
+output "result_api_service_account_unique_id" {
+  value = google_service_account.result_api.unique_id
+}

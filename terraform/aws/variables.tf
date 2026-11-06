@@ -17,3 +17,8 @@ variable "budget_notification_emails" {
   description = "Email addresses notified when the budget threshold is exceeded"
   type        = list(string)
 }
+
+variable "google_cloud_result_api_service_account_id" {
+  description = "Unique ID of the Google Cloud result API service account (result_api_service_account_unique_id output of terraform/google-cloud)"
+  type        = string
+}
