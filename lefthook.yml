@@ -1,0 +1,9 @@
+# core.hooksPath is global, so syncing here would replace the hook shared by every repository.
+no_auto_install: true
+
+pre-commit:
+  commands:
+    lint:
+      run: just lint
+    test:
+      run: just test
