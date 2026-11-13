@@ -1,5 +1,5 @@
 # Build from the repository root, which holds go.mod.
-FROM golang:1.26 AS build
+FROM golang:1.27 AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
