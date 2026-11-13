@@ -94,5 +94,6 @@ deploy-result-api-google-cloud: _validate-tf-backend-bucket
       --entry-point=ResultAPI \
       --trigger-http \
       --service-account="$service_account" \
-      --no-allow-unauthenticated \
+      --allow-unauthenticated \
+      --ingress-settings=internal-and-gclb \
       --set-env-vars=FIRESTORE_COLLECTION=results
