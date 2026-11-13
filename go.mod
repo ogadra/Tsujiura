@@ -1,3 +1,3 @@
 module github.com/ogadra/Tsujiura
 
-go 1.25
+go 1.27.0
