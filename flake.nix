@@ -18,10 +18,10 @@
       # lambroll is not packaged in nixpkgs.
       lambroll = pkgs.stdenvNoCC.mkDerivation rec {
         pname = "lambroll";
-        version = "1.6.0";
+        version = "1.6.1";
         src = pkgs.fetchurl {
           url = "https://github.com/fujiwara/lambroll/releases/download/v${version}/lambroll_v${version}_linux_amd64.tar.gz";
-          sha256 = "e856af90f1b77816c1b079faafacef2c48565ca3d8ded364fd9b8f0e13eed9d9";
+          sha256 = "bf3761c879026d161e350c2e9196e8cbb557e2d2cf8ef7be7575e10f54116c41";
         };
         sourceRoot = ".";
         installPhase = ''
