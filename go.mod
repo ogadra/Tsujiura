@@ -1,6 +1,6 @@
 module github.com/ogadra/Tsujiura
 
-go 1.25.0
+go 1.27.0
 
 require (
 	cloud.google.com/go/auth v0.20.0

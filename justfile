@@ -70,7 +70,7 @@ deploy-ingest-cloud-dns: _validate-tf-backend-bucket
     gcloud functions deploy tsujiura-ingest-cloud-dns \
       --gen2 \
       --region=asia-northeast1 \
-      --runtime=go125 \
+      --runtime=go127 \
       --source="$source_dir" \
       --entry-point=IngestCloudDNS \
       --trigger-topic="$topic" \
@@ -93,7 +93,7 @@ deploy-result-api-google-cloud: _validate-tf-backend-bucket
     gcloud functions deploy tsujiura-result-api \
       --gen2 \
       --region=asia-northeast1 \
-      --runtime=go125 \
+      --runtime=go127 \
       --source="$source_dir" \
       --entry-point=ResultAPI \
       --trigger-http \
