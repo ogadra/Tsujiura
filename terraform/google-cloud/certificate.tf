@@ -10,11 +10,13 @@ resource "google_certificate_manager_dns_authorization" "frontend" {
   depends_on = [google_project_service.certificate_manager]
 }
 
+# The wildcard covers the token names, which the page loads an image from to see which provider answered.
+# One DNS authorization of the apex also authorizes its wildcard.
 resource "google_certificate_manager_certificate" "frontend" {
   name = "tsujiura-frontend"
 
   managed {
-    domains            = [local.domain_name]
+    domains            = [local.domain_name, "*.${local.domain_name}"]
     dns_authorizations = [google_certificate_manager_dns_authorization.frontend.id]
   }
 }
@@ -26,9 +28,14 @@ resource "google_certificate_manager_certificate_map" "frontend" {
 }
 
 resource "google_certificate_manager_certificate_map_entry" "frontend" {
-  name         = "tsujiura-frontend"
+  for_each = {
+    "tsujiura-frontend"          = local.domain_name
+    "tsujiura-frontend-wildcard" = "*.${local.domain_name}"
+  }
+
+  name         = each.key
   map          = google_certificate_manager_certificate_map.frontend.name
-  hostname     = local.domain_name
+  hostname     = each.value
   certificates = [google_certificate_manager_certificate.frontend.id]
 }
 
