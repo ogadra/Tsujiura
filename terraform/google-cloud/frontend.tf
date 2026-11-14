@@ -6,7 +6,7 @@ resource "google_project_service" "frontend" {
 }
 
 resource "google_storage_bucket" "frontend" {
-  name                        = "${var.project_id}-frontend"
+  name                        = "${data.google_project.current.project_id}-frontend"
   location                    = "asia-northeast1"
   uniform_bucket_level_access = true
   public_access_prevention    = "inherited"
