@@ -7,9 +7,19 @@ const MEASURE_FAILED = "結果を取得できなかったため、計測を止�
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Only the name resolution matters, so the image is allowed to fail.
-function resolveToken(token) {
-  new Image().src = `https://${token}.${DOMAIN}/`;
+// Each provider points the token names at its own frontend, and each frontend serves provider.svg at its own width.
+// The width is read instead of a response body because an image needs no CORS to be read across origins.
+const PROVIDER_BY_WIDTH = { 1: "route53", 2: "cloudDns" };
+
+// Resolves with the provider whose answer the browser connected to, or null when the image does not load by the deadline.
+function probeToken(token, deadline) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(PROVIDER_BY_WIDTH[image.naturalWidth] ?? null);
+    image.onerror = () => resolve(null);
+    setTimeout(() => resolve(null), deadline - Date.now());
+    image.src = `https://${token}.${DOMAIN}/provider.svg`;
+  });
 }
 
 async function fetchResult(token) {
@@ -35,25 +45,66 @@ async function pollToken(token, deadline, run) {
 
 async function measure() {
   const tokens = Array.from({ length: TOKEN_COUNT }, () => crypto.randomUUID());
-  tokens.forEach(resolveToken);
   const deadline = Date.now() + POLL_TIMEOUT_MS;
   const run = { stopped: false };
   try {
-    return await Promise.all(tokens.map((token) => pollToken(token, deadline, run)));
+    return await Promise.all(
+      tokens.map(async (token) => {
+        const [answeredBy, result] = await Promise.all([probeToken(token, deadline), pollToken(token, deadline, run)]);
+        return { answeredBy, ...result };
+      }),
+    );
   } finally {
     run.stopped = true;
   }
 }
 
+function summarizeAnswers(results) {
+  const count = (provider) => results.filter((result) => result.answeredBy === provider).length;
+  const unknown = results.filter((result) => result.answeredBy === null).length;
+  return `ブラウザが使った答え: Route53 ${count("route53")}回、Cloud DNS ${count("cloudDns")}回、判別できなかった ${unknown}個`;
+}
+
+function summarizeQueries(results) {
+  const count = (provider) => results.filter((result) => result.body[provider]).length;
+  const missing = results.filter((result) => !result.body.route53 && !result.body.cloudDns).length;
+  return `問い合わせが届いた先: Route53 ${count("route53")}回、Cloud DNS ${count("cloudDns")}回、どちらにも届かなかった ${missing}個`;
+}
+
+// Counts each resolver ASN per provider, since one resolver may query both providers.
+function summarizeResolvers(results) {
+  const resolvers = new Map();
+  for (const result of results) {
+    for (const [provider, name] of [["route53", "Route53"], ["cloudDns", "Cloud DNS"]]) {
+      const record = result.body[provider];
+      if (!record) {
+        continue;
+      }
+      const resolver = record.asn ? `AS${record.asn} ${record.asOrganization ?? ""}`.trim() : "ASN不明";
+      const counts = resolvers.get(resolver) ?? new Map();
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+      resolvers.set(resolver, counts);
+    }
+  }
+  if (resolvers.size === 0) {
+    return "問い合わせたリゾルバ: なし";
+  }
+  const lines = [...resolvers].map(([resolver, counts]) => {
+    const perProvider = [...counts].map(([name, n]) => `${name} ${n}回`).join("、");
+    return `${resolver}(${perProvider})`;
+  });
+  return `問い合わせたリゾルバ: ${lines.join("、")}`;
+}
+
 function summarize(results) {
+  const answers = summarizeAnswers(results);
   const failed = results.filter((result) => result.status !== 200);
   if (failed.length > 0) {
     const databases = new Set(failed.flatMap((result) => result.body.unavailable ?? []));
-    return databases.size > 0 ? `${[...databases].join("、")}を読めなかったため、計測を止めました` : MEASURE_FAILED;
+    const reason = databases.size > 0 ? `${[...databases].join("、")}を読めなかったため、計測を止めました` : MEASURE_FAILED;
+    return [answers, reason].join("\n");
   }
-  const count = (provider) => results.filter((result) => result.body[provider]).length;
-  const missing = results.filter((result) => !result.body.route53 && !result.body.cloudDns).length;
-  return `Route53: ${count("route53")}回、Cloud DNS: ${count("cloudDns")}回、どちらにも届かなかった: ${missing}個`;
+  return [answers, summarizeQueries(results), summarizeResolvers(results)].join("\n");
 }
 
 const output = document.getElementById("result");

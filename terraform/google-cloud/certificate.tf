@@ -5,7 +5,7 @@ resource "google_project_service" "certificate_manager" {
 
 resource "google_certificate_manager_dns_authorization" "frontend" {
   name   = "tsujiura-frontend"
-  domain = var.domain_name
+  domain = local.domain_name
 
   depends_on = [google_project_service.certificate_manager]
 }
@@ -14,7 +14,7 @@ resource "google_certificate_manager_certificate" "frontend" {
   name = "tsujiura-frontend"
 
   managed {
-    domains            = [var.domain_name]
+    domains            = [local.domain_name]
     dns_authorizations = [google_certificate_manager_dns_authorization.frontend.id]
   }
 }
@@ -28,7 +28,7 @@ resource "google_certificate_manager_certificate_map" "frontend" {
 resource "google_certificate_manager_certificate_map_entry" "frontend" {
   name         = "tsujiura-frontend"
   map          = google_certificate_manager_certificate_map.frontend.name
-  hostname     = var.domain_name
+  hostname     = local.domain_name
   certificates = [google_certificate_manager_certificate.frontend.id]
 }
 
