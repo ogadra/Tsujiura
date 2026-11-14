@@ -6,9 +6,19 @@ const POLL_TIMEOUT_MS = 60000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Only the name resolution matters, so the image is allowed to fail.
-function resolveToken(token) {
-  new Image().src = `https://${token}.${DOMAIN}/`;
+// Each provider points the token names at its own frontend, and each frontend serves provider.svg at its own width.
+// The width is read instead of a response body because an image needs no CORS to be read across origins.
+const PROVIDER_BY_WIDTH = { 1: "route53", 2: "cloudDns" };
+
+// Resolves with the provider whose answer the browser connected to, or null when the image does not load by the deadline.
+function probeToken(token, deadline) {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(PROVIDER_BY_WIDTH[image.naturalWidth] ?? null);
+    image.onerror = () => resolve(null);
+    setTimeout(() => resolve(null), deadline - Date.now());
+    image.src = `https://${token}.${DOMAIN}/provider.svg`;
+  });
 }
 
 async function fetchResult(token) {
@@ -30,9 +40,13 @@ async function pollToken(token, deadline) {
 
 async function measure() {
   const tokens = Array.from({ length: TOKEN_COUNT }, () => crypto.randomUUID());
-  tokens.forEach(resolveToken);
   const deadline = Date.now() + POLL_TIMEOUT_MS;
-  return Promise.all(tokens.map((token) => pollToken(token, deadline)));
+  return Promise.all(
+    tokens.map(async (token) => {
+      const [answeredBy, result] = await Promise.all([probeToken(token, deadline), pollToken(token, deadline)]);
+      return { answeredBy, ...result };
+    }),
+  );
 }
 
 measure();
