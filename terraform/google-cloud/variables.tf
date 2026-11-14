@@ -3,11 +3,6 @@ variable "domain_name" {
   type        = string
 }
 
-variable "project_id" {
-  description = "Google Cloud project ID dedicated to Tsujiura"
-  type        = string
-}
-
 variable "billing_account_id" {
   description = "Cloud Billing account ID that owns the budget"
   type        = string
