@@ -10,7 +10,8 @@ terraform {
 }
 
 provider "google" {
-  project        = var.project_id
   region         = "asia-northeast1"
   default_labels = local.common_labels
 }
+
+data "google_project" "current" {}
