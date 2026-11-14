@@ -1,0 +1,11 @@
+# core.hooksPath is global, so syncing here would replace the hook shared by every repository.
+no_auto_install: true
+
+pre-commit:
+  commands:
+    gofmt:
+      run: test -z "$(gofmt -l .)"
+    vet:
+      run: go vet ./...
+    test:
+      run: go test ./...
