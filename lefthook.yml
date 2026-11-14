@@ -3,7 +3,9 @@ no_auto_install: true
 
 pre-commit:
   commands:
-    lint:
-      run: just lint
+    gofmt:
+      run: test -z "$(gofmt -l .)"
+    vet:
+      run: go vet ./...
     test:
-      run: just test
+      run: go test ./...
