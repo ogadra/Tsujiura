@@ -12,7 +12,7 @@ resource "google_project_iam_custom_role" "result_api" {
 }
 
 resource "google_project_iam_member" "result_api_firestore" {
-  project = var.project_id
+  project = data.google_project.current.project_id
   role    = google_project_iam_custom_role.result_api.id
   member  = google_service_account.result_api.member
 }
