@@ -1,8 +1,8 @@
 # The Budget API rejects user credentials unless a quota project is set.
 provider "google" {
   alias                 = "billing"
-  project               = var.project_id
-  billing_project       = var.project_id
+  project               = data.google_project.current.project_id
+  billing_project       = data.google_project.current.project_id
   user_project_override = true
 }
 
@@ -15,8 +15,6 @@ resource "google_project_service" "budget" {
   service            = each.value
   disable_on_destroy = false
 }
-
-data "google_project" "current" {}
 
 resource "google_monitoring_notification_channel" "budget" {
   for_each = var.budget_notification_emails
