@@ -1,8 +1,3 @@
-variable "domain_name" {
-  description = "FQDN for the service"
-  type        = string
-}
-
 variable "billing_account_id" {
   description = "Cloud Billing account ID that owns the budget"
   type        = string
