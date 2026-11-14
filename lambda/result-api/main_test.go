@@ -11,7 +11,7 @@ import (
 
 type reader struct{}
 
-func (reader) Has(context.Context, string) (bool, error) { return true, nil }
+func (reader) Get(context.Context, string) (*result.Record, error) { return &result.Record{}, nil }
 
 func TestHandleAnswersFirestoreUnavailable(t *testing.T) {
 	request := events.ALBTargetGroupRequest{QueryStringParameters: map[string]string{"token": "550e8400-e29b-41d4-a716-446655440000"}}
