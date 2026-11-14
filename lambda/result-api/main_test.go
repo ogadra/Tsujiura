@@ -18,11 +18,13 @@ import (
 
 type reader struct{}
 
-func (reader) Has(context.Context, string) (bool, error) { return true, nil }
+func (reader) Get(context.Context, string) (*result.Record, error) { return &result.Record{}, nil }
 
 type unreadable struct{}
 
-func (unreadable) Has(context.Context, string) (bool, error) { return false, errors.New("unreadable") }
+func (unreadable) Get(context.Context, string) (*result.Record, error) {
+	return nil, errors.New("unreadable")
+}
 
 func TestHandleAnswersFirestoreUnavailable(t *testing.T) {
 	request := events.ALBTargetGroupRequest{QueryStringParameters: map[string]string{"token": "550e8400-e29b-41d4-a716-446655440000"}}

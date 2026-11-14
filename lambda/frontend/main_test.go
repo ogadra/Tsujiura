@@ -14,6 +14,7 @@ func TestHandle(t *testing.T) {
 	}{
 		{"/", "text/html; charset=utf-8", "<title>Tsujiura</title>", 200},
 		{"/main.js", "text/javascript; charset=utf-8", "crypto.randomUUID()", 200},
+		{"/provider.svg", "image/svg+xml", `width="1"`, 200},
 		{"/missing", "", "", 404},
 	}
 	for _, tt := range tests {

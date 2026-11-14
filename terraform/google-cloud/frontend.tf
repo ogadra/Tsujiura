@@ -28,15 +28,17 @@ resource "google_storage_bucket_iam_member" "frontend_public" {
 
 resource "google_storage_bucket_object" "frontend" {
   for_each = {
-    "index.html" = "text/html; charset=utf-8"
-    "main.js"    = "text/javascript; charset=utf-8"
+    "index.html" = { source = "index.html", content_type = "text/html; charset=utf-8" }
+    "main.js"    = { source = "main.js", content_type = "text/javascript; charset=utf-8" }
+    # Cloud DNS points the token names here, and the page reads this width to tell that Cloud DNS answered.
+    "provider.svg" = { source = "provider/google-cloud.svg", content_type = "image/svg+xml" }
   }
 
   bucket         = google_storage_bucket.frontend.name
   name           = each.key
-  content_type   = each.value
-  source         = "${path.module}/../../web/${each.key}"
-  source_md5hash = filemd5("${path.module}/../../web/${each.key}")
+  content_type   = each.value.content_type
+  source         = "${path.module}/../../web/${each.value.source}"
+  source_md5hash = filemd5("${path.module}/../../web/${each.value.source}")
 }
 
 resource "google_compute_backend_bucket" "frontend" {
