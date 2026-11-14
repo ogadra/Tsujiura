@@ -25,7 +25,7 @@ locals {
   alb_lambda_targets = {
     frontend = {
       function = data.aws_lambda_function.frontend
-      paths    = ["/", "/main.js"]
+      paths    = ["/", "/main.js", "/provider.svg"]
       priority = 10
     }
     result_api = {
