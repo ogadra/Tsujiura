@@ -1,11 +1,11 @@
 data "aws_route53_zone" "tsujiura" {
-  name = var.domain_name
+  name = local.domain_name
 }
 
 resource "aws_cloudwatch_log_group" "route53_query_log" {
   provider = aws.use1
 
-  name              = "/aws/route53/${var.domain_name}"
+  name              = "/aws/route53/${local.domain_name}"
   retention_in_days = 1
 }
 

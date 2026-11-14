@@ -19,8 +19,8 @@ import (
 // unreadableDynamoDB stands in until the function can authenticate to AWS.
 type unreadableDynamoDB struct{}
 
-func (unreadableDynamoDB) Has(context.Context, string) (bool, error) {
-	return false, errors.New("dynamodb is not readable from Google Cloud yet")
+func (unreadableDynamoDB) Get(context.Context, string) (*result.Record, error) {
+	return nil, errors.New("dynamodb is not readable from Google Cloud yet")
 }
 
 type api struct {
