@@ -28,7 +28,7 @@ resource "google_service_account_iam_member" "result_api_aws" {
 }
 
 output "project_id" {
-  value = var.project_id
+  value = data.google_project.current.project_id
 }
 
 output "result_api_workload_identity_audience" {

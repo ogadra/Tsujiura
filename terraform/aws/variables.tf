@@ -3,11 +3,6 @@ variable "domain_name" {
   type        = string
 }
 
-variable "aws_profile" {
-  description = "AWS CLI profile name for the target account"
-  type        = string
-}
-
 variable "budget_limit_usd" {
   description = "Monthly budget for log and DNS query costs in USD"
   type        = string
