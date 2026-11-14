@@ -26,7 +26,7 @@ resource "google_project_iam_custom_role" "ingest_cloud_dns" {
 }
 
 resource "google_project_iam_member" "ingest_cloud_dns_firestore" {
-  project = var.project_id
+  project = data.google_project.current.project_id
   role    = google_project_iam_custom_role.ingest_cloud_dns.id
   member  = google_service_account.ingest_cloud_dns.member
 }
@@ -41,7 +41,7 @@ resource "google_service_account" "ingest_cloud_dns_trigger" {
 resource "google_project_iam_member" "ingest_cloud_dns_trigger" {
   for_each = toset(["roles/eventarc.eventReceiver", "roles/run.invoker"])
 
-  project = var.project_id
+  project = data.google_project.current.project_id
   role    = each.value
   member  = google_service_account.ingest_cloud_dns_trigger.member
 }
