@@ -19,8 +19,8 @@ import (
 // unreadableFirestore stands in until the Lambda can authenticate to Google Cloud.
 type unreadableFirestore struct{}
 
-func (unreadableFirestore) Has(context.Context, string) (bool, error) {
-	return false, errors.New("firestore is not readable from AWS yet")
+func (unreadableFirestore) Get(context.Context, string) (*result.Record, error) {
+	return nil, errors.New("firestore is not readable from AWS yet")
 }
 
 type api struct{ result.Aggregator }

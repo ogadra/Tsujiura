@@ -16,7 +16,7 @@ resource "google_logging_project_sink" "dns_query_logs" {
   destination = "pubsub.googleapis.com/${google_pubsub_topic.dns_query_logs.id}"
 
   # Resolvers may randomize the case of the query name.
-  filter = "resource.type=\"dns_query\" AND jsonPayload.queryName=~\"(?i)(^|[.])${replace(var.domain_name, ".", "[.]")}[.]?$\""
+  filter = "resource.type=\"dns_query\" AND jsonPayload.queryName=~\"(?i)(^|[.])${replace(local.domain_name, ".", "[.]")}[.]?$\""
 
   unique_writer_identity = true
 

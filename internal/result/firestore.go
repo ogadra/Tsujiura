@@ -2,6 +2,7 @@ package result
 
 import (
 	"context"
+	"fmt"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/grpc/codes"
@@ -13,10 +14,17 @@ type Firestore struct {
 	Results *firestore.CollectionRef
 }
 
-// Has implements Reader.
-func (f Firestore) Has(ctx context.Context, token string) (bool, error) {
-	_, err := f.Results.Doc(token).Get(ctx)
-	return exists(err)
+// Get implements Reader.
+func (f Firestore) Get(ctx context.Context, token string) (*Record, error) {
+	snapshot, err := f.Results.Doc(token).Get(ctx)
+	if found, err := exists(err); !found {
+		return nil, err
+	}
+	record := &Record{}
+	if err := snapshot.DataTo(record); err != nil {
+		return nil, fmt.Errorf("decode the record of %s: %w", token, err)
+	}
+	return record, nil
 }
 
 // exists interprets the error of a document read.
