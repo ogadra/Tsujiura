@@ -1,8 +1,3 @@
-variable "domain_name" {
-  description = "FQDN for the service"
-  type        = string
-}
-
 variable "budget_limit_usd" {
   description = "Monthly budget for log and DNS query costs in USD"
   type        = string
