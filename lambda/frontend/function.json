@@ -1,0 +1,11 @@
+{
+  "FunctionName": "tsujiura-frontend",
+  "Role": "{{ tfstate `aws_iam_role.frontend.arn` }}",
+  "PackageType": "Image",
+  "Code": {
+    "ImageUri": "{{ tfstate `aws_ecr_repository.frontend.repository_url` }}:{{ must_env `IMAGE_TAG` }}"
+  },
+  "Architectures": ["x86_64"],
+  "MemorySize": 128,
+  "Timeout": 10
+}
