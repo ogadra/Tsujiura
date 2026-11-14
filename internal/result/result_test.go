@@ -11,26 +11,29 @@ import (
 const token = "550e8400-e29b-41d4-a716-446655440000"
 
 type reader struct {
-	found bool
-	err   error
+	record *Record
+	err    error
 }
 
-func (r reader) Has(_ context.Context, got string) (bool, error) {
+func (r reader) Get(_ context.Context, got string) (*Record, error) {
 	if got != token {
-		return false, errors.New("unexpected token " + got)
+		return nil, errors.New("unexpected token " + got)
 	}
-	return r.found, r.err
+	return r.record, r.err
 }
 
 type hangingReader struct{}
 
-func (hangingReader) Has(ctx context.Context, _ string) (bool, error) {
+func (hangingReader) Get(ctx context.Context, _ string) (*Record, error) {
 	<-ctx.Done()
-	return false, ctx.Err()
+	return nil, ctx.Err()
 }
 
 func TestRespond(t *testing.T) {
 	failed := reader{err: errors.New("read failed")}
+	kddi := reader{record: &Record{ASN: 2516, Organization: "KDDI CORPORATION"}}
+	google := reader{record: &Record{ASN: 15169, Organization: "GOOGLE"}}
+	unknown := reader{record: &Record{}}
 	tests := []struct {
 		name       string
 		token      string
@@ -39,12 +42,13 @@ func TestRespond(t *testing.T) {
 		wantStatus int
 		wantBody   string
 	}{
-		{"neither", token, reader{}, reader{}, http.StatusOK, `{"route53":false,"cloudDns":false}`},
-		{"route53", token, reader{found: true}, reader{}, http.StatusOK, `{"route53":true,"cloudDns":false}`},
-		{"cloud dns", token, reader{}, reader{found: true}, http.StatusOK, `{"route53":false,"cloudDns":true}`},
-		{"both", token, reader{found: true}, reader{found: true}, http.StatusOK, `{"route53":true,"cloudDns":true}`},
-		{"dynamodb down", token, failed, reader{found: true}, http.StatusServiceUnavailable, `{"unavailable":["DynamoDB"]}`},
-		{"firestore down", token, reader{found: true}, failed, http.StatusServiceUnavailable, `{"unavailable":["Firestore"]}`},
+		{"neither", token, reader{}, reader{}, http.StatusOK, `{"route53":null,"cloudDns":null}`},
+		{"route53", token, kddi, reader{}, http.StatusOK, `{"route53":{"asn":2516,"asOrganization":"KDDI CORPORATION"},"cloudDns":null}`},
+		{"cloud dns", token, reader{}, google, http.StatusOK, `{"route53":null,"cloudDns":{"asn":15169,"asOrganization":"GOOGLE"}}`},
+		{"both", token, kddi, google, http.StatusOK, `{"route53":{"asn":2516,"asOrganization":"KDDI CORPORATION"},"cloudDns":{"asn":15169,"asOrganization":"GOOGLE"}}`},
+		{"unknown asn", token, unknown, reader{}, http.StatusOK, `{"route53":{},"cloudDns":null}`},
+		{"dynamodb down", token, failed, google, http.StatusServiceUnavailable, `{"unavailable":["DynamoDB"]}`},
+		{"firestore down", token, kddi, failed, http.StatusServiceUnavailable, `{"unavailable":["Firestore"]}`},
 		{"both down", token, failed, failed, http.StatusServiceUnavailable, `{"unavailable":["DynamoDB","Firestore"]}`},
 		{"empty token", "", reader{}, reader{}, http.StatusBadRequest, `{"error":"invalid token"}`},
 		{"path in token", "results/" + token, reader{}, reader{}, http.StatusBadRequest, `{"error":"invalid token"}`},
