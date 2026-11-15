@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Measures the delay from a Cloud DNS query to the Firestore document the ingest function writes.
 # The document's createTime stands in for the receipt, so the polling interval does not affect the delay.
 set -euo pipefail
 
