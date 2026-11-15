@@ -1,3 +1,10 @@
+locals {
+  budget_service_ids = {
+    cloud_logging = "services/5490-F7B7-8DF6"
+    cloud_dns     = "services/FA26-5236-B8B5"
+  }
+}
+
 # The Budget API rejects user credentials unless a quota project is set.
 provider "google" {
   alias                 = "billing"
@@ -37,8 +44,7 @@ resource "google_billing_budget" "logs_and_dns" {
 
   budget_filter {
     projects = ["projects/${data.google_project.current.number}"]
-    # Cloud Logging and Cloud DNS.
-    services = ["services/5490-F7B7-8DF6", "services/FA26-5236-B8B5"]
+    services = values(local.budget_service_ids)
   }
 
   amount {
