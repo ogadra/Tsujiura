@@ -1,9 +1,11 @@
 resource "google_project_service" "firestore" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   service            = "firestore.googleapis.com"
   disable_on_destroy = false
 }
 
 resource "google_firestore_database" "main" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   name        = "(default)"
   location_id = "asia-northeast1"
   type        = "FIRESTORE_NATIVE"
@@ -12,6 +14,7 @@ resource "google_firestore_database" "main" {
 }
 
 resource "google_firestore_field" "results_expires_at" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   database   = google_firestore_database.main.name
   collection = "results"
   field      = "expiresAt"

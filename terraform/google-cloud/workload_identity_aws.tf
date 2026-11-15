@@ -1,4 +1,5 @@
 resource "google_project_service" "workload_identity" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   for_each = toset(["iam.googleapis.com", "iamcredentials.googleapis.com", "sts.googleapis.com"])
 
   service            = each.value
@@ -6,12 +7,15 @@ resource "google_project_service" "workload_identity" {
 }
 
 resource "google_iam_workload_identity_pool" "aws" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   workload_identity_pool_id = "tsujiura-aws"
 
   depends_on = [google_project_service.workload_identity]
 }
 
 resource "google_iam_workload_identity_pool_provider" "aws" {
+  # checkov:skip=CKV_GCP_125:This check only targets GitHub Actions OIDC and errors on providers without an oidc block
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   workload_identity_pool_id          = google_iam_workload_identity_pool.aws.workload_identity_pool_id
   workload_identity_pool_provider_id = "result-api"
   attribute_condition                = "attribute.aws_role == \"${var.result_api_assumed_role_arn}\""
@@ -22,6 +26,7 @@ resource "google_iam_workload_identity_pool_provider" "aws" {
 }
 
 resource "google_service_account_iam_member" "result_api_aws" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   service_account_id = google_service_account.result_api.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.aws.name}/attribute.aws_role/${var.result_api_assumed_role_arn}"

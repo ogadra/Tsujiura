@@ -1,4 +1,5 @@
 resource "google_compute_region_network_endpoint_group" "result_api" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   name                  = "tsujiura-result-api"
   region                = "asia-northeast1"
   network_endpoint_type = "SERVERLESS"
@@ -11,6 +12,7 @@ resource "google_compute_region_network_endpoint_group" "result_api" {
 }
 
 resource "google_compute_backend_service" "result_api" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   name = "tsujiura-result-api"
 
   backend {

@@ -11,18 +11,10 @@ terraform {
 
 provider "aws" {
   region = "ap-northeast-1"
-
-  default_tags {
-    tags = local.common_tags
-  }
 }
 
 # Route53 query logs can only be delivered to CloudWatch Logs in us-east-1.
 provider "aws" {
   alias  = "use1"
   region = "us-east-1"
-
-  default_tags {
-    tags = local.common_tags
-  }
 }

@@ -31,9 +31,12 @@ data "aws_iam_policy_document" "google_cloud_result_api_assume" {
 resource "aws_iam_role" "google_cloud_result_api" {
   name               = "tsujiura-google-cloud-result-api"
   assume_role_policy = data.aws_iam_policy_document.google_cloud_result_api_assume.json
+
+  tags = local.common_tags
 }
 
 resource "aws_iam_role_policy" "google_cloud_result_api" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   name   = "read-results"
   role   = aws_iam_role.google_cloud_result_api.id
   policy = data.aws_iam_policy_document.result_api.json
