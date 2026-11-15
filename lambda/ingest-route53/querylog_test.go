@@ -1,14 +1,14 @@
-package querylog
+package main
 
 import (
 	"net/netip"
 	"testing"
 	"time"
+
+	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
-const token = "550e8400-e29b-41d4-a716-446655440000"
-
-func TestParseRoute53(t *testing.T) {
+func TestParseQueryLog(t *testing.T) {
 	queriedAt := time.Date(2017, 12, 13, 8, 16, 2, 130_000_000, time.UTC)
 
 	tests := []struct {
@@ -23,14 +23,14 @@ func TestParseRoute53(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok, err := ParseRoute53(tt.line)
+			got, ok, err := parseQueryLog(tt.line)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if !ok {
 				t.Fatal("line was discarded")
 			}
-			want := Query{Token: token, ResolverIP: netip.MustParseAddr(tt.ip), Time: queriedAt}
+			want := querylog.Query{Token: token, ResolverIP: netip.MustParseAddr(tt.ip), Time: queriedAt}
 			if got != want {
 				t.Errorf("got %+v, want %+v", got, want)
 			}
@@ -38,7 +38,7 @@ func TestParseRoute53(t *testing.T) {
 	}
 }
 
-func TestParseRoute53DiscardsOtherNames(t *testing.T) {
+func TestParseQueryLogDiscardsOtherNames(t *testing.T) {
 	names := []string{
 		"tsujiura.ogadra.net",
 		"www.tsujiura.ogadra.net",
@@ -51,7 +51,7 @@ func TestParseRoute53DiscardsOtherNames(t *testing.T) {
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
-			_, ok, err := ParseRoute53("1.0 2017-12-13T08:16:02.130Z Z1 " + name + " A NOERROR UDP NRT57 192.0.2.1 -")
+			_, ok, err := parseQueryLog("1.0 2017-12-13T08:16:02.130Z Z1 " + name + " A NOERROR UDP NRT57 192.0.2.1 -")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -62,7 +62,7 @@ func TestParseRoute53DiscardsOtherNames(t *testing.T) {
 	}
 }
 
-func TestParseRoute53Errors(t *testing.T) {
+func TestParseQueryLogErrors(t *testing.T) {
 	name := token + ".tsujiura.ogadra.net"
 	tests := []struct {
 		name string
@@ -76,7 +76,7 @@ func TestParseRoute53Errors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, ok, err := ParseRoute53(tt.line); err == nil || ok {
+			if _, ok, err := parseQueryLog(tt.line); err == nil || ok {
 				t.Errorf("got ok=%v err=%v, want an error", ok, err)
 			}
 		})
