@@ -10,7 +10,6 @@ resource "aws_budgets_budget" "main" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
-  # The account is shared with bunshin, so an account-wide budget would count its costs too.
   cost_filter {
     name   = "TagKeyValue"
     values = [format("user:%s$%s", aws_ce_cost_allocation_tag.project.tag_key, local.common_tags.Project)]
