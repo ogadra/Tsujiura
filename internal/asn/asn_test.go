@@ -1,10 +1,9 @@
 package asn
 
 import (
+	"bytes"
 	"net"
 	"net/netip"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/maxmind/mmdbwriter"
@@ -38,21 +37,15 @@ func openTestDB(t *testing.T) *DB {
 		}
 	}
 
-	path := filepath.Join(t.TempDir(), "asn.mmdb")
-	file, err := os.Create(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer file.Close()
-	if _, err := tree.WriteTo(file); err != nil {
+	var data bytes.Buffer
+	if _, err := tree.WriteTo(&data); err != nil {
 		t.Fatal(err)
 	}
 
-	db, err := Open(path)
+	db, err := New(data.Bytes())
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { db.Close() })
 	return db
 }
 
@@ -108,8 +101,8 @@ func TestDBLookupInvalidAddr(t *testing.T) {
 	}
 }
 
-func TestOpenMissingFile(t *testing.T) {
-	if _, err := Open(filepath.Join(t.TempDir(), "missing.mmdb")); err == nil {
+func TestNewRejectsInvalidData(t *testing.T) {
+	if _, err := New([]byte("not a database")); err == nil {
 		t.Error("got no error")
 	}
 }
