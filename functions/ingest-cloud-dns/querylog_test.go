@@ -1,10 +1,12 @@
-package querylog
+package ingestclouddns
 
 import (
 	"fmt"
 	"net/netip"
 	"testing"
 	"time"
+
+	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
 const cloudDNSTimestamp = "2017-12-13T08:16:02.130456789Z"
@@ -26,7 +28,7 @@ func cloudDNSEntryJSON(timestamp, name, ip string) []byte {
 	}`, name, ip, timestamp)
 }
 
-func TestParseCloudDNS(t *testing.T) {
+func TestParseQueryLog(t *testing.T) {
 	queriedAt := time.Date(2017, 12, 13, 8, 16, 2, 130_456_789, time.UTC)
 
 	tests := []struct {
@@ -41,14 +43,14 @@ func TestParseCloudDNS(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, ok, err := ParseCloudDNS(cloudDNSEntryJSON(cloudDNSTimestamp, tt.queryName, tt.ip))
+			got, ok, err := parseQueryLog(cloudDNSEntryJSON(cloudDNSTimestamp, tt.queryName, tt.ip))
 			if err != nil {
 				t.Fatal(err)
 			}
 			if !ok {
 				t.Fatal("entry was discarded")
 			}
-			want := Query{Token: token, ResolverIP: netip.MustParseAddr(tt.ip), Time: queriedAt}
+			want := querylog.Query{Token: token, ResolverIP: netip.MustParseAddr(tt.ip), Time: queriedAt}
 			if got != want {
 				t.Errorf("got %+v, want %+v", got, want)
 			}
@@ -56,7 +58,7 @@ func TestParseCloudDNS(t *testing.T) {
 	}
 }
 
-func TestParseCloudDNSDiscardsOtherNames(t *testing.T) {
+func TestParseQueryLogDiscardsOtherNames(t *testing.T) {
 	names := []string{
 		".",
 		"tsujiura.ogadra.net.",
@@ -67,7 +69,7 @@ func TestParseCloudDNSDiscardsOtherNames(t *testing.T) {
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
-			_, ok, err := ParseCloudDNS(cloudDNSEntryJSON("yesterday", name, "resolver"))
+			_, ok, err := parseQueryLog(cloudDNSEntryJSON("yesterday", name, "resolver"))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -78,7 +80,7 @@ func TestParseCloudDNSDiscardsOtherNames(t *testing.T) {
 	}
 }
 
-func TestParseCloudDNSErrors(t *testing.T) {
+func TestParseQueryLogErrors(t *testing.T) {
 	name := token + ".tsujiura.ogadra.net."
 	tests := []struct {
 		name  string
@@ -92,7 +94,7 @@ func TestParseCloudDNSErrors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, ok, err := ParseCloudDNS(tt.entry); err == nil || ok {
+			if _, ok, err := parseQueryLog(tt.entry); err == nil || ok {
 				t.Errorf("got ok=%v err=%v, want an error", ok, err)
 			}
 		})
