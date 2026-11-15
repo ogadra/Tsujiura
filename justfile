@@ -10,7 +10,6 @@ init vendor: (_validate-vendor vendor) _validate-tf-backend-bucket
 geolite2-asn:
     curl -fsSL -u "$MAXMIND_ACCOUNT_ID:$MAXMIND_LICENSE_KEY" "https://download.maxmind.com/geoip/databases/GeoLite2-ASN/download?suffix=tar.gz" | tar -xzf - --strip-components=1 --wildcards '*/GeoLite2-ASN.mmdb'
 
-# Needs `just geolite2-asn` for the image and `just init aws` for the repository URL.
 deploy-ingest-route53: _validate-tf-backend-bucket
     #!/usr/bin/env bash
     set -euo pipefail
