@@ -10,8 +10,7 @@ resource "google_certificate_manager_dns_authorization" "frontend" {
   depends_on = [google_project_service.certificate_manager]
 }
 
-# The wildcard covers the token names, which the page loads an image from to see which provider answered.
-# One DNS authorization of the apex also authorizes its wildcard.
+# One DNS authorization of the apex also covers the wildcard that serves provider.svg.
 resource "google_certificate_manager_certificate" "frontend" {
   name = "tsujiura-frontend"
 

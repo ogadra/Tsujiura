@@ -1,4 +1,4 @@
-# The wildcard covers the token names, which the page loads an image from to see which provider answered.
+# The wildcard serves provider.svg on the token names.
 resource "aws_acm_certificate" "main" {
   domain_name               = local.domain_name
   subject_alternative_names = ["*.${local.domain_name}"]
@@ -32,7 +32,7 @@ resource "aws_lb_listener" "https" {
 }
 
 locals {
-  # ACM lists the record once for the apex and once for the wildcard, so one() fails unless they collapse into one.
+  # ACM lists the shared record once per name, so collapse it before one().
   acm_validation = one(distinct([
     for option in aws_acm_certificate.main.domain_validation_options : {
       name  = option.resource_record_name
