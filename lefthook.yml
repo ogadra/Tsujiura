@@ -9,3 +9,7 @@ pre-commit:
       run: go vet ./...
     test:
       run: go test ./...
+    checkov:
+      run: |
+        untracked=$(git ls-files --others --ignored --exclude-standard --directory | grep '/$' | sed 's|/$||;s|\.|\\.|g' | paste -sd'|')
+        checkov -d . --quiet --compact --external-checks-dir terraform/checkov --skip-path "($untracked)"
