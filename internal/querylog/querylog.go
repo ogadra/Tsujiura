@@ -16,7 +16,7 @@ type Query struct {
 }
 
 // Names are lowered first because resolvers may randomize their case.
-func tokenFromName(name string) (string, bool) {
+func TokenFromName(name string) (string, bool) {
 	m := tokenName.FindStringSubmatch(strings.ToLower(strings.TrimSuffix(name, ".")))
 	if m == nil {
 		return "", false
