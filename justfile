@@ -1,4 +1,4 @@
-geolite2-asn:
+update-asn:
     #!/usr/bin/env bash
     set -euo pipefail
     s3_bucket="$(terraform -chdir=terraform/aws output -raw asn_bucket)"
