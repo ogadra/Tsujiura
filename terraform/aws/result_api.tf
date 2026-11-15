@@ -1,7 +1,12 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_ecr_repository" "result_api" {
+  # checkov:skip=CKV_AWS_136:AWS managed encryption is sufficient
   name = "tsujiura-result-api"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 
   tags = local.common_tags
 }

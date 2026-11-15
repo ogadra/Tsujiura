@@ -1,5 +1,10 @@
 resource "aws_ecr_repository" "frontend" {
+  # checkov:skip=CKV_AWS_136:AWS managed encryption is sufficient
   name = "tsujiura-frontend"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 
   tags = local.common_tags
 }

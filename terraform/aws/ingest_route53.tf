@@ -1,7 +1,12 @@
 resource "aws_ecr_repository" "ingest_route53" {
+  # checkov:skip=CKV_AWS_136:AWS managed encryption is sufficient
   provider = aws.use1
 
   name = "tsujiura-ingest-route53"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
 
   tags = local.common_tags
 }

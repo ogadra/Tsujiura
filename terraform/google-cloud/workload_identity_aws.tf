@@ -14,6 +14,7 @@ resource "google_iam_workload_identity_pool" "aws" {
 }
 
 resource "google_iam_workload_identity_pool_provider" "aws" {
+  # checkov:skip=CKV_GCP_125:This check only targets GitHub Actions OIDC and errors on providers without an oidc block
   # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   workload_identity_pool_id          = google_iam_workload_identity_pool.aws.workload_identity_pool_id
   workload_identity_pool_provider_id = "result-api"
