@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/ogadra/Tsujiura/internal/asn"
 	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
@@ -22,7 +23,7 @@ type item = map[string]types.AttributeValue
 
 type ingester struct {
 	put    func(context.Context, item) error
-	lookup func(netip.Addr) (querylog.ASN, bool, error)
+	lookup func(netip.Addr) (asn.AS, bool, error)
 }
 
 // handle is safe to retry because items are keyed by token.
@@ -76,7 +77,7 @@ func requireEnv(name string) string {
 
 func main() {
 	table := requireEnv("RESULTS_TABLE_NAME")
-	asns, err := querylog.OpenASNDB(requireEnv("ASN_DB_PATH"))
+	asns, err := asn.Open(requireEnv("ASN_DB_PATH"))
 	if err != nil {
 		log.Fatal(err)
 	}
