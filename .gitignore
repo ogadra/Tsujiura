@@ -6,4 +6,3 @@
 *.tfstate.*
 *_override.tf
 *.tfvars
-*.mmdb
