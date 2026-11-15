@@ -17,7 +17,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-// googleCredentials exchanges the AWS credentials in the Lambda environment for a service account token.
 func googleCredentials(audience, serviceAccount string) *externalaccount.Options {
 	return &externalaccount.Options{
 		Audience:                       audience,
