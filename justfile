@@ -53,7 +53,6 @@ deploy-ingest-cloud-dns: _validate-tf-backend-bucket
       --retry \
       --set-env-vars=FIRESTORE_COLLECTION=results,ASN_DB_PATH=serverless_function_source_code/GeoLite2-ASN.mmdb
 
-# Needs `just init google-cloud` for the outputs.
 deploy-result-api-google-cloud: _validate-tf-backend-bucket
     #!/usr/bin/env bash
     set -euo pipefail
