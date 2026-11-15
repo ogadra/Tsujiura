@@ -22,4 +22,6 @@ resource "aws_budgets_budget" "logs_and_dns" {
       subscriber_email_addresses = var.budget_notification_emails
     }
   }
+
+  tags = local.common_tags
 }

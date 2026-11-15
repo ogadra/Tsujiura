@@ -1,13 +1,18 @@
 resource "aws_ecr_repository" "frontend" {
   name = "tsujiura-frontend"
+
+  tags = local.common_tags
 }
 
 resource "aws_iam_role" "frontend" {
   name               = "tsujiura-frontend"
   assume_role_policy = data.aws_iam_policy_document.ingest_route53_assume.json
+
+  tags = local.common_tags
 }
 
 resource "aws_iam_role_policy_attachment" "frontend_logs" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   role       = aws_iam_role.frontend.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
@@ -44,9 +49,12 @@ resource "aws_lb_target_group" "lambda" {
 
   # The result API reads the token from the single-value query string parameters.
   lambda_multi_value_headers_enabled = false
+
+  tags = local.common_tags
 }
 
 resource "aws_lambda_permission" "alb" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   for_each = local.alb_lambda_targets
 
   action        = "lambda:InvokeFunction"
@@ -56,6 +64,7 @@ resource "aws_lambda_permission" "alb" {
 }
 
 resource "aws_lb_target_group_attachment" "lambda" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   for_each   = local.alb_lambda_targets
   depends_on = [aws_lambda_permission.alb]
 
@@ -79,6 +88,8 @@ resource "aws_lb_listener_rule" "lambda" {
       values = each.value.paths
     }
   }
+
+  tags = local.common_tags
 }
 
 output "frontend_repository_url" {

@@ -1,10 +1,12 @@
 resource "google_service_account" "result_api" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   account_id   = "tsujiura-result-api"
   display_name = "Tsujiura result API function"
 }
 
 # roles/datastore.viewer also lists documents and reads the database metadata.
 resource "google_project_iam_custom_role" "result_api" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   role_id = "tsujiuraResultApi"
   title   = "Tsujiura result API"
 
@@ -12,6 +14,7 @@ resource "google_project_iam_custom_role" "result_api" {
 }
 
 resource "google_project_iam_member" "result_api_firestore" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   project = data.google_project.current.project_id
   role    = google_project_iam_custom_role.result_api.id
   member  = google_service_account.result_api.member

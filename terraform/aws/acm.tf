@@ -7,9 +7,12 @@ resource "aws_acm_certificate" "main" {
   lifecycle {
     create_before_destroy = true
   }
+
+  tags = local.common_tags
 }
 
 resource "aws_acm_certificate_validation" "main" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   certificate_arn = aws_acm_certificate.main.arn
 }
 
@@ -29,6 +32,8 @@ resource "aws_lb_listener" "https" {
       status_code  = "404"
     }
   }
+
+  tags = local.common_tags
 }
 
 locals {

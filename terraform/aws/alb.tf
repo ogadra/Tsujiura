@@ -2,6 +2,8 @@ resource "aws_security_group" "alb" {
   name        = "tsujiura-alb"
   description = "HTTPS from the internet to the ALB"
   vpc_id      = aws_vpc.main.id
+
+  tags = local.common_tags
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_https" {
@@ -11,6 +13,8 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https" {
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
+
+  tags = local.common_tags
 }
 
 resource "aws_lb" "main" {
@@ -19,4 +23,6 @@ resource "aws_lb" "main" {
   security_groups            = [aws_security_group.alb.id]
   subnets                    = [for subnet in aws_subnet.public : subnet.id]
   drop_invalid_header_fields = true
+
+  tags = local.common_tags
 }

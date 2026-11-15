@@ -1,4 +1,5 @@
 resource "google_project_service" "ingest_cloud_dns" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   for_each = toset([
     "artifactregistry.googleapis.com",
     "cloudbuild.googleapis.com",
@@ -12,12 +13,14 @@ resource "google_project_service" "ingest_cloud_dns" {
 }
 
 resource "google_service_account" "ingest_cloud_dns" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   account_id   = "tsujiura-ingest-cloud-dns"
   display_name = "Tsujiura Cloud DNS ingest function"
 }
 
 # Every predefined Firestore role that writes also reads.
 resource "google_project_iam_custom_role" "ingest_cloud_dns" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   role_id = "tsujiuraIngestCloudDns"
   title   = "Tsujiura Cloud DNS ingest"
 
@@ -26,6 +29,7 @@ resource "google_project_iam_custom_role" "ingest_cloud_dns" {
 }
 
 resource "google_project_iam_member" "ingest_cloud_dns_firestore" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   project = data.google_project.current.project_id
   role    = google_project_iam_custom_role.ingest_cloud_dns.id
   member  = google_service_account.ingest_cloud_dns.member
@@ -33,12 +37,14 @@ resource "google_project_iam_member" "ingest_cloud_dns_firestore" {
 
 # Separate from the runtime account, which may only write to Firestore.
 resource "google_service_account" "ingest_cloud_dns_trigger" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   account_id   = "tsujiura-ingest-dns-trigger"
   display_name = "Tsujiura Cloud DNS ingest trigger"
 }
 
 # gcloud owns the Cloud Run service, so the role is granted on the project.
 resource "google_project_iam_member" "ingest_cloud_dns_trigger" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   for_each = toset(["roles/eventarc.eventReceiver", "roles/run.invoker"])
 
   project = data.google_project.current.project_id

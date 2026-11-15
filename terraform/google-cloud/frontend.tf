@@ -1,4 +1,5 @@
 resource "google_project_service" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   for_each = toset(["compute.googleapis.com", "storage.googleapis.com"])
 
   service            = each.value
@@ -15,17 +16,21 @@ resource "google_storage_bucket" "frontend" {
     main_page_suffix = "index.html"
   }
 
+  labels = local.common_labels
+
   depends_on = [google_project_service.frontend]
 }
 
 # roles/storage.objectViewer also lets anyone list the bucket.
 resource "google_storage_bucket_iam_member" "frontend_public" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   bucket = google_storage_bucket.frontend.name
   role   = "roles/storage.legacyObjectReader"
   member = "allUsers"
 }
 
 resource "google_storage_bucket_object" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   for_each = {
     "index.html" = { source = "index.html", content_type = "text/html; charset=utf-8" }
     "main.js"    = { source = "main.js", content_type = "text/javascript; charset=utf-8" }
@@ -41,6 +46,7 @@ resource "google_storage_bucket_object" "frontend" {
 }
 
 resource "google_compute_backend_bucket" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   name        = "tsujiura-frontend"
   bucket_name = google_storage_bucket.frontend.name
   enable_cdn  = true
@@ -53,6 +59,7 @@ resource "google_compute_backend_bucket" "frontend" {
 }
 
 resource "google_compute_url_map" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   name            = "tsujiura-frontend"
   default_service = google_compute_backend_bucket.frontend.id
 
@@ -74,6 +81,8 @@ resource "google_compute_url_map" "frontend" {
 
 resource "google_compute_global_address" "frontend" {
   name = "tsujiura-frontend"
+
+  labels = local.common_labels
 
   depends_on = [google_project_service.frontend]
 }

@@ -13,4 +13,6 @@ resource "aws_dynamodb_table" "results" {
     attribute_name = "expiresAt"
     enabled        = true
   }
+
+  tags = local.common_tags
 }
