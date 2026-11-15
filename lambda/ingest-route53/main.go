@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/ogadra/Tsujiura/internal/asn"
-	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
 type item = map[string]types.AttributeValue
@@ -38,7 +37,7 @@ func (i ingester) handle(ctx context.Context, event events.CloudwatchLogsEvent) 
 	}
 
 	for _, logEvent := range data.LogEvents {
-		query, ok, err := querylog.ParseRoute53(logEvent.Message)
+		query, ok, err := parseQueryLog(logEvent.Message)
 		if err != nil {
 			log.Printf("skip log event %s: %v", logEvent.ID, err)
 		}
