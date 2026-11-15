@@ -85,13 +85,11 @@ func encode(status int, body any) (int, []byte) {
 	return status, encoded
 }
 
-// DynamoDB reads the Route53 records from a table keyed by token.
 type DynamoDB struct {
 	GetItem func(context.Context, *dynamodb.GetItemInput, ...func(*dynamodb.Options)) (*dynamodb.GetItemOutput, error)
 	Table   string
 }
 
-// Get implements Reader.
 // The two attributes are read by hand, since attributevalue would add a module only for them.
 func (d DynamoDB) Get(ctx context.Context, token string) (*Record, error) {
 	out, err := d.GetItem(ctx, &dynamodb.GetItemInput{
