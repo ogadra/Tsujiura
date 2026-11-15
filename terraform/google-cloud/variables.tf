@@ -4,7 +4,7 @@ variable "billing_account_id" {
 }
 
 variable "budget_amount_units" {
-  description = "Monthly budget for log and DNS query costs in whole units of the billing account currency"
+  description = "Monthly budget for the Tsujiura project in whole units of the billing account currency"
   type        = string
 }
 

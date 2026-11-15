@@ -1,10 +1,3 @@
-locals {
-  budget_service_ids = {
-    cloud_logging = "services/5490-F7B7-8DF6"
-    cloud_dns     = "services/FA26-5236-B8B5"
-  }
-}
-
 # The Budget API rejects user credentials unless a quota project is set.
 provider "google" {
   alias                 = "billing"
@@ -36,15 +29,14 @@ resource "google_monitoring_notification_channel" "budget" {
   depends_on = [google_project_service.budget]
 }
 
-resource "google_billing_budget" "logs_and_dns" {
+resource "google_billing_budget" "main" {
   provider = google.billing
 
   billing_account = var.billing_account_id
-  display_name    = "tsujiura-logs-and-dns"
+  display_name    = "tsujiura"
 
   budget_filter {
     projects = ["projects/${data.google_project.current.number}"]
-    services = values(local.budget_service_ids)
   }
 
   amount {

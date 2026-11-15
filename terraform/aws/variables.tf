@@ -1,5 +1,5 @@
 variable "budget_limit_usd" {
-  description = "Monthly budget for log and DNS query costs in USD"
+  description = "Monthly budget for resources tagged Project = Tsujiura in USD"
   type        = string
 }
 

@@ -1,14 +1,19 @@
-resource "aws_budgets_budget" "logs_and_dns" {
-  name         = "tsujiura-logs-and-dns"
+resource "aws_ce_cost_allocation_tag" "project" {
+  tag_key = "Project"
+  status  = "Active"
+}
+
+resource "aws_budgets_budget" "main" {
+  name         = "tsujiura"
   budget_type  = "COST"
   limit_amount = var.budget_limit_usd
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
-  # CloudWatch Logs is billed under AmazonCloudWatch.
+  # The account is shared with bunshin, so an account-wide budget would count its costs too.
   cost_filter {
-    name   = "Service"
-    values = ["AmazonCloudWatch", "Amazon Route 53"]
+    name   = "TagKeyValue"
+    values = [format("user:%s$%s", aws_ce_cost_allocation_tag.project.tag_key, local.common_tags.Project)]
   }
 
   dynamic "notification" {
