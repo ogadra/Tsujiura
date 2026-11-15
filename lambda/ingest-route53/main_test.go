@@ -14,7 +14,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/ogadra/Tsujiura/internal/querylog"
+	"github.com/ogadra/Tsujiura/internal/asn"
 )
 
 const token = "550e8400-e29b-41d4-a716-446655440000"
@@ -33,10 +33,10 @@ func encodeEvent(messageType string, lines ...string) events.CloudwatchLogsEvent
 }
 
 func TestHandle(t *testing.T) {
-	unknown := func(netip.Addr) (querylog.ASN, bool, error) { return querylog.ASN{}, false, nil }
-	example := querylog.ASN{Number: 64496, Organization: "Example"}
-	known := func(netip.Addr) (querylog.ASN, bool, error) { return example, true, nil }
-	broken := func(netip.Addr) (querylog.ASN, bool, error) { return querylog.ASN{}, false, errors.New("failure") }
+	unknown := func(netip.Addr) (asn.AS, bool, error) { return asn.AS{}, false, nil }
+	example := asn.AS{Number: 64496, Organization: "Example"}
+	known := func(netip.Addr) (asn.AS, bool, error) { return example, true, nil }
+	broken := func(netip.Addr) (asn.AS, bool, error) { return asn.AS{}, false, errors.New("failure") }
 
 	withoutASN := item{
 		"token":      &types.AttributeValueMemberS{Value: token},
@@ -51,7 +51,7 @@ func TestHandle(t *testing.T) {
 	tests := []struct {
 		name    string
 		event   events.CloudwatchLogsEvent
-		lookup  func(netip.Addr) (querylog.ASN, bool, error)
+		lookup  func(netip.Addr) (asn.AS, bool, error)
 		putErr  error
 		want    []item
 		wantErr bool

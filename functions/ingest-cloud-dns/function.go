@@ -14,7 +14,7 @@ import (
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
 
-	"github.com/ogadra/Tsujiura/internal/querylog"
+	"github.com/ogadra/Tsujiura/internal/asn"
 )
 
 const resultTTL = 24 * time.Hour
@@ -29,7 +29,7 @@ type result struct {
 }
 
 type ingester struct {
-	lookupASN   func(netip.Addr) (querylog.ASN, bool, error)
+	lookupASN   func(netip.Addr) (asn.AS, bool, error)
 	writeResult func(context.Context, result) error
 }
 
@@ -55,7 +55,7 @@ func newIngester() (*ingester, error) {
 		return nil, errors.New("ASN_DB_PATH is not set")
 	}
 
-	asnDB, err := querylog.OpenASNDB(asnDBPath)
+	asnDB, err := asn.Open(asnDBPath)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (in *ingester) ingest(ctx context.Context, e event.Event) error {
 		return fmt.Errorf("decode pub/sub message: %w", err)
 	}
 
-	query, ok, err := querylog.ParseCloudDNS(data.Message.Data)
+	query, ok, err := parseQueryLog(data.Message.Data)
 	if err != nil {
 		slog.ErrorContext(ctx, "drop query log entry", "error", err)
 		return nil
