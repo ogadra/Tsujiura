@@ -1,4 +1,3 @@
-// Command ingest-route53 stores Route53 query logs in DynamoDB.
 package main
 
 import (

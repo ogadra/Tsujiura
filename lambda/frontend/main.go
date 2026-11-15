@@ -1,4 +1,3 @@
-// Command frontend serves the measurement page behind the ALB.
 package main
 
 import (
@@ -13,7 +12,7 @@ import (
 var assets = map[string]struct{ file, contentType string }{
 	"/":        {"index.html", "text/html; charset=utf-8"},
 	"/main.js": {"main.js", "text/javascript; charset=utf-8"},
-	// Route53 points the token names here, and the page reads this width to tell that Route53 answered.
+	// Width 1 tells the page that Route53 answered.
 	"/provider.svg": {"provider/aws.svg", "image/svg+xml"},
 }
 

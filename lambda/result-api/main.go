@@ -1,4 +1,3 @@
-// Command result-api answers which DNS provider received a measurement token.
 package main
 
 import (
