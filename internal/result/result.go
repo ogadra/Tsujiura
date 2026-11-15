@@ -1,4 +1,3 @@
-// Package result reports which DNS provider received a measurement token.
 package result
 
 import (
@@ -20,7 +19,6 @@ import (
 // readTimeout turns a hanging database into a 503 that names it.
 const readTimeout = 3 * time.Second
 
-// Record is the resolver that sent the query for a token.
 // The ingest functions leave the ASN out when the database has no entry for the resolver IP.
 type Record struct {
 	ASN          int64  `json:"asn,omitempty"`
@@ -32,30 +30,24 @@ type Reader interface {
 	Get(ctx context.Context, token string) (*Record, error)
 }
 
-// Aggregator reads both databases.
-// DynamoDB holds the Route53 records and Firestore the Cloud DNS records.
 type Aggregator struct {
 	DynamoDB  Reader
 	Firestore Reader
 }
 
-// Found is the 200 response body, with null for a provider that has no record.
 type Found struct {
 	Route53  *Record `json:"route53"`
 	CloudDNS *Record `json:"cloudDns"`
 }
 
-// Unavailable is the 503 response body.
 type Unavailable struct {
 	Databases []string `json:"unavailable"`
 }
 
-// Invalid is the 400 response body.
 type Invalid struct {
 	Error string `json:"error"`
 }
 
-// Respond returns the HTTP status and JSON body of the result of token.
 func (a Aggregator) Respond(ctx context.Context, token string) (int, []byte) {
 	if !querylog.IsToken(token) {
 		return encode(http.StatusBadRequest, Invalid{Error: "invalid token"})
