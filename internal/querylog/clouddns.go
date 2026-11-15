@@ -16,8 +16,7 @@ type cloudDNSEntry struct {
 	} `json:"jsonPayload"`
 }
 
-// ParseCloudDNS parses one Cloud DNS query log entry in the Cloud Logging LogEntry JSON format.
-// It returns false without an error when the name is not a measurement name.
+// ParseCloudDNS reports false for names other than measurement names.
 func ParseCloudDNS(entry []byte) (Query, bool, error) {
 	var e cloudDNSEntry
 	if err := json.Unmarshal(entry, &e); err != nil {
