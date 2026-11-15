@@ -9,12 +9,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// Firestore reads the Cloud DNS records from a collection keyed by token.
 type Firestore struct {
 	Results *firestore.CollectionRef
 }
 
-// Get implements Reader.
 func (f Firestore) Get(ctx context.Context, token string) (*Record, error) {
 	snapshot, err := f.Results.Doc(token).Get(ctx)
 	if found, err := exists(err); !found {
@@ -27,7 +25,6 @@ func (f Firestore) Get(ctx context.Context, token string) (*Record, error) {
 	return record, nil
 }
 
-// exists interprets the error of a document read.
 func exists(err error) (bool, error) {
 	if status.Code(err) == codes.NotFound {
 		return false, nil

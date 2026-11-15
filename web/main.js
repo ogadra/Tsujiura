@@ -7,11 +7,9 @@ const MEASURE_FAILED = "結果を取得できなかったため、計測を止�
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Each provider points the token names at its own frontend, and each frontend serves provider.svg at its own width.
-// The width is read instead of a response body because an image needs no CORS to be read across origins.
+// An image needs no CORS, so the frontends tell the providers apart by the width of provider.svg.
 const PROVIDER_BY_WIDTH = { 1: "route53", 2: "cloudDns" };
 
-// Resolves with the provider whose answer the browser connected to, or null when the image does not load by the deadline.
 function probeToken(token, deadline) {
   return new Promise((resolve) => {
     const image = new Image();
@@ -27,7 +25,6 @@ async function fetchResult(token) {
   return { status: response.status, body: await response.json() };
 }
 
-// Polls until a provider has a record, the deadline passes, or any token of the run stops it.
 async function pollToken(token, deadline, run) {
   for (;;) {
     const result = await fetchResult(token);
@@ -71,7 +68,6 @@ function summarizeQueries(results) {
   return `問い合わせが届いた先: Route53 ${count("route53")}回、Cloud DNS ${count("cloudDns")}回、どちらにも届かなかった ${missing}個`;
 }
 
-// Counts each resolver ASN per provider, since one resolver may query both providers.
 function summarizeResolvers(results) {
   const resolvers = new Map();
   for (const result of results) {
