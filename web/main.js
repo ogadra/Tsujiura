@@ -27,7 +27,6 @@ async function fetchResult(token) {
   return { status: response.status, body: await response.json() };
 }
 
-// Polls until a provider has a record, the deadline passes, or any token of the run stops it.
 async function pollToken(token, deadline, run) {
   for (;;) {
     const result = await fetchResult(token);

@@ -1,4 +1,3 @@
-// Package ingestclouddns stores the Cloud DNS query logs delivered by Pub/Sub in Firestore.
 package ingestclouddns
 
 import (
@@ -20,7 +19,6 @@ import (
 
 const resultTTL = 24 * time.Hour
 
-// result is the Firestore document of a token.
 type result struct {
 	Token          string    `firestore:"token"`
 	ResolverIP     string    `firestore:"resolverIp"`
@@ -76,7 +74,6 @@ func newIngester() (*ingester, error) {
 	}, nil
 }
 
-// ingest stores the query of one Pub/Sub message.
 // A log entry that cannot be parsed is dropped because redelivery would not fix it.
 func (in *ingester) ingest(ctx context.Context, e event.Event) error {
 	var data struct {
