@@ -6,7 +6,7 @@ resource "aws_ce_cost_allocation_tag" "project" {
 resource "aws_budgets_budget" "main" {
   name         = "tsujiura"
   budget_type  = "COST"
-  limit_amount = var.budget_limit_usd
+  limit_amount = "30"
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 

@@ -6,27 +6,9 @@ provider "google" {
   user_project_override = true
 }
 
-resource "google_project_service" "budget" {
-  for_each = toset([
-    "billingbudgets.googleapis.com",
-    "monitoring.googleapis.com",
-  ])
-
-  service            = each.value
+resource "google_project_service" "billingbudgets" {
+  service            = "billingbudgets.googleapis.com"
   disable_on_destroy = false
-}
-
-resource "google_monitoring_notification_channel" "budget" {
-  for_each = var.budget_notification_emails
-
-  display_name = "tsujiura-budget-${each.value}"
-  type         = "email"
-
-  labels = {
-    email_address = each.value
-  }
-
-  depends_on = [google_project_service.budget]
 }
 
 resource "google_billing_budget" "main" {
@@ -41,7 +23,8 @@ resource "google_billing_budget" "main" {
 
   amount {
     specified_amount {
-      units = var.budget_amount_units
+      currency_code = "JPY"
+      units         = "5000"
     }
   }
 
@@ -53,9 +36,5 @@ resource "google_billing_budget" "main" {
     threshold_percent = 1.0
   }
 
-  all_updates_rule {
-    monitoring_notification_channels = [for channel in google_monitoring_notification_channel.budget : channel.id]
-  }
-
-  depends_on = [google_project_service.budget]
+  depends_on = [google_project_service.billingbudgets]
 }
