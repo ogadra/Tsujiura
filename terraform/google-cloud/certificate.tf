@@ -52,12 +52,12 @@ resource "google_compute_global_forwarding_rule" "frontend" {
 }
 
 output "certificate_validation_cname_name" {
-  description = "Name of the Google-managed certificate validation CNAME to pass to ogadra-net"
+  description = "Name of the Google-managed certificate validation CNAME"
   value       = one(google_certificate_manager_dns_authorization.frontend.dns_resource_record).name
 }
 
 output "certificate_validation_cname_value" {
-  description = "Value of the Google-managed certificate validation CNAME to pass to ogadra-net"
+  description = "Value of the Google-managed certificate validation CNAME"
   value       = one(google_certificate_manager_dns_authorization.frontend.dns_resource_record).data
 }
 
