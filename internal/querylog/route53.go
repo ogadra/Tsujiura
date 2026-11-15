@@ -12,8 +12,7 @@ const (
 	route53FieldCount = 10
 )
 
-// ParseRoute53 parses one Route53 query log line.
-// It returns false without an error when the name is not a measurement name.
+// ParseRoute53 reports false for names other than measurement names.
 func ParseRoute53(line string) (Query, bool, error) {
 	fields := strings.Fields(line)
 	if len(fields) != route53FieldCount {
@@ -23,7 +22,7 @@ func ParseRoute53(line string) (Query, bool, error) {
 		return Query{}, false, fmt.Errorf("route53 query log has version %q, want %q: %q", fields[0], route53Version, line)
 	}
 
-	token, ok := tokenFromName(fields[3])
+	token, ok := TokenFromName(fields[3])
 	if !ok {
 		return Query{}, false, nil
 	}
