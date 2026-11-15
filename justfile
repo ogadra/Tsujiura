@@ -20,7 +20,6 @@ deploy-ingest-route53: _validate-tf-backend-bucket
     docker push "$repository:$IMAGE_TAG"
     lambroll deploy --function lambda/ingest-route53/function.json --region us-east-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
 
-# Needs `just geolite2-asn` for the database and `just init google-cloud` for the outputs.
 deploy-ingest-cloud-dns: _validate-tf-backend-bucket
     #!/usr/bin/env bash
     set -euo pipefail
