@@ -15,14 +15,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/ogadra/Tsujiura/internal/querylog"
+	"github.com/ogadra/Tsujiura/internal/asn"
 )
 
 type item = map[string]types.AttributeValue
 
 type ingester struct {
 	put    func(context.Context, item) error
-	lookup func(netip.Addr) (querylog.ASN, bool, error)
+	lookup func(netip.Addr) (asn.AS, bool, error)
 }
 
 // handle is safe to retry because items are keyed by token.
@@ -37,7 +37,7 @@ func (i ingester) handle(ctx context.Context, event events.CloudwatchLogsEvent) 
 	}
 
 	for _, logEvent := range data.LogEvents {
-		query, ok, err := querylog.ParseRoute53(logEvent.Message)
+		query, ok, err := parseQueryLog(logEvent.Message)
 		if err != nil {
 			log.Printf("skip log event %s: %v", logEvent.ID, err)
 		}
@@ -76,7 +76,7 @@ func requireEnv(name string) string {
 
 func main() {
 	table := requireEnv("RESULTS_TABLE_NAME")
-	asns, err := querylog.OpenASNDB(requireEnv("ASN_DB_PATH"))
+	asns, err := asn.Open(requireEnv("ASN_DB_PATH"))
 	if err != nil {
 		log.Fatal(err)
 	}
