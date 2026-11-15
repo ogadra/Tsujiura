@@ -7,6 +7,9 @@ resource "google_project_service" "frontend" {
 }
 
 resource "google_storage_bucket" "frontend" {
+  # checkov:skip=CKV_GCP_62:Access logs are not used
+  # checkov:skip=CKV_GCP_114:The bucket is public to serve the measurement page
+  # checkov:skip=CKV_GCP_78:Terraform uploads every object again from web/
   name                        = "${data.google_project.current.project_id}-frontend"
   location                    = "asia-northeast1"
   uniform_bucket_level_access = true
@@ -24,6 +27,7 @@ resource "google_storage_bucket" "frontend" {
 # roles/storage.objectViewer also lets anyone list the bucket.
 resource "google_storage_bucket_iam_member" "frontend_public" {
   # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  # checkov:skip=CKV_GCP_28:The bucket is public to serve the measurement page
   bucket = google_storage_bucket.frontend.name
   role   = "roles/storage.legacyObjectReader"
   member = "allUsers"

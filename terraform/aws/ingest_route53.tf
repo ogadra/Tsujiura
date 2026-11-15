@@ -1,5 +1,6 @@
 resource "aws_ecr_repository" "ingest_route53" {
   # checkov:skip=CKV_AWS_136:AWS managed encryption is sufficient
+  # checkov:skip=CKV_AWS_51:Redeploying a commit pushes its short SHA tag again
   provider = aws.use1
 
   name = "tsujiura-ingest-route53"

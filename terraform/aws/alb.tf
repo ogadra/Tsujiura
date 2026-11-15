@@ -18,6 +18,9 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https" {
 }
 
 resource "aws_lb" "main" {
+  # checkov:skip=CKV_AWS_91:ALB access logs are not used
+  # checkov:skip=CKV_AWS_150:Deletion protection would block terraform destroy
+  # checkov:skip=CKV2_AWS_76:The backends are Go Lambdas, which Log4j does not affect
   name                       = "tsujiura"
   load_balancer_type         = "application"
   security_groups            = [aws_security_group.alb.id]

@@ -2,6 +2,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_ecr_repository" "result_api" {
   # checkov:skip=CKV_AWS_136:AWS managed encryption is sufficient
+  # checkov:skip=CKV_AWS_51:Redeploying a commit pushes its short SHA tag again
   name = "tsujiura-result-api"
 
   image_scanning_configuration {

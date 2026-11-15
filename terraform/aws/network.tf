@@ -6,6 +6,7 @@ locals {
 }
 
 resource "aws_vpc" "main" {
+  # checkov:skip=CKV2_AWS_11:The VPC only holds the ALB
   cidr_block = "10.0.0.0/16"
 
   tags = merge(local.common_tags, {

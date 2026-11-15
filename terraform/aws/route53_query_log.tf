@@ -3,6 +3,8 @@ data "aws_route53_zone" "tsujiura" {
 }
 
 resource "aws_cloudwatch_log_group" "route53_query_log" {
+  # checkov:skip=CKV_AWS_158:KMS encryption is not required for this use case
+  # checkov:skip=CKV_AWS_338:Query logs only feed the ingest Lambda, so one day of retention is enough
   provider = aws.use1
 
   name              = "/aws/route53/${local.domain_name}"

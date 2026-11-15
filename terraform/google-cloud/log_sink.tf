@@ -7,6 +7,7 @@ resource "google_project_service" "log_sink" {
 }
 
 resource "google_pubsub_topic" "dns_query_logs" {
+  # checkov:skip=CKV_GCP_83:Google managed encryption is sufficient for this use case
   name = "dns-query-logs"
 
   labels = local.common_labels

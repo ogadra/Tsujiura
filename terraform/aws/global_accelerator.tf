@@ -1,4 +1,5 @@
 resource "aws_globalaccelerator_accelerator" "main" {
+  # checkov:skip=CKV_AWS_75:Flow logs are not used
   name            = "tsujiura"
   ip_address_type = "IPV4"
   enabled         = true
