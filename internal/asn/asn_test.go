@@ -1,4 +1,4 @@
-package querylog
+package asn
 
 import (
 	"net"
@@ -11,8 +11,8 @@ import (
 	"github.com/maxmind/mmdbwriter/mmdbtype"
 )
 
-// openTestASNDB builds a database because GeoLite2 data is not kept in the repository.
-func openTestASNDB(t *testing.T) *ASNDB {
+// openTestDB builds a database because GeoLite2 data is not kept in the repository.
+func openTestDB(t *testing.T) *DB {
 	t.Helper()
 
 	tree, err := mmdbwriter.New(mmdbwriter.Options{DatabaseType: "GeoLite2-ASN", IncludeReservedNetworks: true})
@@ -48,7 +48,7 @@ func openTestASNDB(t *testing.T) *ASNDB {
 		t.Fatal(err)
 	}
 
-	db, err := OpenASNDB(path)
+	db, err := Open(path)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,17 +56,17 @@ func openTestASNDB(t *testing.T) *ASNDB {
 	return db
 }
 
-func TestASNDBLookup(t *testing.T) {
-	db := openTestASNDB(t)
+func TestDBLookup(t *testing.T) {
+	db := openTestDB(t)
 
 	tests := []struct {
 		name string
 		ip   string
-		want ASN
+		want AS
 	}{
-		{"IPv4", "192.0.2.1", ASN{Number: 64496, Organization: "IPv4 Example"}},
-		{"IPv6", "2001:db8::1234", ASN{Number: 64497, Organization: "IPv6 Example"}},
-		{"IPv4-mapped IPv6", "::ffff:192.0.2.1", ASN{Number: 64496, Organization: "IPv4 Example"}},
+		{"IPv4", "192.0.2.1", AS{Number: 64496, Organization: "IPv4 Example"}},
+		{"IPv6", "2001:db8::1234", AS{Number: 64497, Organization: "IPv6 Example"}},
+		{"IPv4-mapped IPv6", "::ffff:192.0.2.1", AS{Number: 64496, Organization: "IPv4 Example"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -84,8 +84,8 @@ func TestASNDBLookup(t *testing.T) {
 	}
 }
 
-func TestASNDBLookupUnknownNetwork(t *testing.T) {
-	db := openTestASNDB(t)
+func TestDBLookupUnknownNetwork(t *testing.T) {
+	db := openTestDB(t)
 
 	for _, ip := range []string{"198.51.100.1", "2001:db9::1"} {
 		t.Run(ip, func(t *testing.T) {
@@ -100,16 +100,16 @@ func TestASNDBLookupUnknownNetwork(t *testing.T) {
 	}
 }
 
-func TestASNDBLookupInvalidAddr(t *testing.T) {
-	db := openTestASNDB(t)
+func TestDBLookupInvalidAddr(t *testing.T) {
+	db := openTestDB(t)
 
 	if _, ok, err := db.Lookup(netip.Addr{}); err == nil || ok {
 		t.Errorf("got ok=%v err=%v, want an error", ok, err)
 	}
 }
 
-func TestOpenASNDBMissingFile(t *testing.T) {
-	if _, err := OpenASNDB(filepath.Join(t.TempDir(), "missing.mmdb")); err == nil {
+func TestOpenMissingFile(t *testing.T) {
+	if _, err := Open(filepath.Join(t.TempDir(), "missing.mmdb")); err == nil {
 		t.Error("got no error")
 	}
 }
