@@ -11,7 +11,7 @@ import (
 
 	"github.com/cloudevents/sdk-go/v2/event"
 
-	"github.com/ogadra/Tsujiura/internal/querylog"
+	"github.com/ogadra/Tsujiura/internal/asn"
 )
 
 const token = "550e8400-e29b-41d4-a716-446655440000"
@@ -52,11 +52,11 @@ func TestIngest(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var got []result
 			in := &ingester{
-				lookupASN: func(netip.Addr) (querylog.ASN, bool, error) {
+				lookupASN: func(netip.Addr) (asn.AS, bool, error) {
 					if !tt.found {
-						return querylog.ASN{}, false, tt.lookupErr
+						return asn.AS{}, false, tt.lookupErr
 					}
-					return querylog.ASN{Number: 64496, Organization: "Example"}, true, nil
+					return asn.AS{Number: 64496, Organization: "Example"}, true, nil
 				},
 				writeResult: func(_ context.Context, r result) error {
 					if tt.writeErr != nil {
