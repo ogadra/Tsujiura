@@ -42,11 +42,11 @@ locals {
 }
 
 output "acm_validation_cname_name" {
-  description = "Name of the ACM validation CNAME to pass to ogadra-net"
+  description = "Name of the ACM validation CNAME"
   value       = local.acm_validation.name
 }
 
 output "acm_validation_cname_value" {
-  description = "Value of the ACM validation CNAME to pass to ogadra-net"
+  description = "Value of the ACM validation CNAME"
   value       = local.acm_validation.value
 }
