@@ -11,7 +11,6 @@ resource "google_storage_bucket" "frontend" {
   uniform_bucket_level_access = true
   public_access_prevention    = "inherited"
 
-  # The backend bucket answers / with this object.
   website {
     main_page_suffix = "index.html"
   }
@@ -30,7 +29,7 @@ resource "google_storage_bucket_object" "frontend" {
   for_each = {
     "index.html" = { source = "index.html", content_type = "text/html; charset=utf-8" }
     "main.js"    = { source = "main.js", content_type = "text/javascript; charset=utf-8" }
-    # Cloud DNS points the token names here, and the page reads this width to tell that Cloud DNS answered.
+    # Width 2 tells the page that Cloud DNS answered.
     "provider.svg" = { source = "provider/google-cloud.svg", content_type = "image/svg+xml" }
   }
 
