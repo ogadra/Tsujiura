@@ -1,4 +1,4 @@
-# Build from the repository root, which holds go.mod and the page.
+# Build with the repository root as the context.
 FROM golang:1.27 AS build
 WORKDIR /src
 COPY go.mod go.sum ./

@@ -1,4 +1,3 @@
-// Package resultapi answers which DNS provider received a measurement token.
 package resultapi
 
 import (

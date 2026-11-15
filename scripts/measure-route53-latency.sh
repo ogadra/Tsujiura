@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-# Measures how long a Route53 query takes to become readable in DynamoDB.
-# usage: scripts/measure-route53-latency.sh [count] [timeout seconds]
 set -euo pipefail
 
 domain=tsujiura.ogadra.net
