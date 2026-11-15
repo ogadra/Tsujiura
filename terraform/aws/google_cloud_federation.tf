@@ -1,5 +1,4 @@
-# Google ID tokens carry the service account's unique ID in sub and azp, and
-# AWS exposes azp as aud and the requested audience as oaud.
+# AWS maps azp of a Google ID token, the service account's unique ID, to aud and its audience to oaud.
 data "aws_iam_policy_document" "google_cloud_result_api_assume" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]

@@ -23,10 +23,8 @@ import (
 // tokenAudience must match the oaud condition of the role's trust policy.
 const tokenAudience = "sts.amazonaws.com"
 
-// googleIDToken fetches the ID token of the function's service account.
 type googleIDToken struct{}
 
-// GetIdentityToken implements stscreds.IdentityTokenRetriever.
 func (googleIDToken) GetIdentityToken() ([]byte, error) {
 	token, err := metadata.GetWithContext(context.Background(), "instance/service-accounts/default/identity?audience="+tokenAudience)
 	if err != nil {
