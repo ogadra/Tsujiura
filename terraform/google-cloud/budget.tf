@@ -14,7 +14,7 @@ resource "google_project_service" "billingbudgets" {
 resource "google_billing_budget" "main" {
   provider = google.billing
 
-  billing_account = var.billing_account_id
+  billing_account = data.google_project.current.billing_account
   display_name    = "tsujiura"
 
   budget_filter {
