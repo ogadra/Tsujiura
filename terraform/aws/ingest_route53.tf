@@ -10,7 +10,7 @@ resource "aws_iam_role" "ingest_route53" {
 }
 
 resource "aws_iam_role_policy" "ingest_route53" {
-  name   = "put-results"
+  name   = "ingest-route53"
   role   = aws_iam_role.ingest_route53.id
   policy = data.aws_iam_policy_document.ingest_route53.json
 }

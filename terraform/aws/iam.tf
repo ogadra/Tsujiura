@@ -54,4 +54,9 @@ data "aws_iam_policy_document" "ingest_route53" {
     actions   = ["dynamodb:PutItem"]
     resources = [aws_dynamodb_table.results.arn]
   }
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.asn.arn}/GeoLite2-ASN.mmdb"]
+  }
 }
