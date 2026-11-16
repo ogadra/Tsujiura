@@ -12,6 +12,7 @@ update-asn:
 deploy-ingest-route53:
     #!/usr/bin/env bash
     set -euo pipefail
+    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
     repository="$(terraform -chdir=terraform/aws output -raw ingest_route53_repository_url)"
     export IMAGE_TAG="$(git rev-parse --short HEAD)"
     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${repository%%/*}"
