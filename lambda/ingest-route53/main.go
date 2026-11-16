@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/ogadra/Tsujiura/internal/asn"
 )
 
@@ -76,16 +77,20 @@ func requireEnv(name string) string {
 
 func main() {
 	table := requireEnv("RESULTS_TABLE_NAME")
-	asns, err := asn.Open(requireEnv("ASN_DB_PATH"))
+	tableRegion := requireEnv("RESULTS_TABLE_REGION")
+	bucket := requireEnv("ASN_BUCKET")
+
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	asns, err := openASNDB(ctx, s3ObjectReader(s3.NewFromConfig(cfg)), bucket)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// The Lambda runs next to the log group in us-east-1, which is not the region of the table.
-	cfg, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(requireEnv("RESULTS_TABLE_REGION")))
-	if err != nil {
-		log.Fatal(err)
-	}
-	client := dynamodb.NewFromConfig(cfg)
+	client := dynamodb.NewFromConfig(cfg, func(o *dynamodb.Options) { o.Region = tableRegion })
 
 	lambda.Start(ingester{
 		put: func(ctx context.Context, result item) error {
