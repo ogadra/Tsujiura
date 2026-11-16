@@ -14,4 +14,11 @@ provider "google" {
   default_labels = local.common_labels
 }
 
+provider "google" {
+  alias                 = "billing"
+  project               = data.google_project.current.project_id
+  billing_project       = data.google_project.current.project_id
+  user_project_override = true
+}
+
 data "google_project" "current" {}
