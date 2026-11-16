@@ -22,3 +22,18 @@ data "aws_iam_policy_document" "budget_topic" {
     }
   }
 }
+
+data "aws_iam_policy_document" "route53_query_log" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = ["${aws_cloudwatch_log_group.route53_query_log.arn}:*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["route53.amazonaws.com"]
+    }
+  }
+}
