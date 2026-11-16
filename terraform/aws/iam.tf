@@ -37,3 +37,21 @@ data "aws_iam_policy_document" "route53_query_log" {
     }
   }
 }
+
+data "aws_iam_policy_document" "ingest_route53_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "ingest_route53" {
+  statement {
+    actions   = ["dynamodb:PutItem"]
+    resources = [aws_dynamodb_table.results.arn]
+  }
+}
