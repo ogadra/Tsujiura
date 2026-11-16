@@ -1,25 +1,41 @@
-resource "aws_budgets_budget" "logs_and_dns" {
-  name         = "tsujiura-logs-and-dns"
+resource "aws_ce_cost_allocation_tag" "project" {
+  tag_key = "Project"
+  status  = "Active"
+}
+
+resource "aws_sns_topic" "budget" {
+  name = "tsujiura-budget"
+  tags = local.common_tags
+}
+
+resource "aws_sns_topic_policy" "budget" {
+  arn    = aws_sns_topic.budget.arn
+  policy = data.aws_iam_policy_document.budget_topic.json
+}
+
+resource "aws_budgets_budget" "main" {
+  name         = "tsujiura"
   budget_type  = "COST"
-  limit_amount = var.budget_limit_usd
+  limit_amount = "30"
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
-  # CloudWatch Logs is billed under AmazonCloudWatch.
   cost_filter {
-    name   = "Service"
-    values = ["AmazonCloudWatch", "Amazon Route 53"]
+    name   = "TagKeyValue"
+    values = [format("user:%s$%s", aws_ce_cost_allocation_tag.project.tag_key, local.common_tags.Project)]
   }
 
   dynamic "notification" {
     for_each = [80, 100]
 
     content {
-      comparison_operator        = "GREATER_THAN"
-      notification_type          = "ACTUAL"
-      threshold                  = notification.value
-      threshold_type             = "PERCENTAGE"
-      subscriber_email_addresses = var.budget_notification_emails
+      comparison_operator       = "GREATER_THAN"
+      notification_type         = "ACTUAL"
+      threshold                 = notification.value
+      threshold_type            = "PERCENTAGE"
+      subscriber_sns_topic_arns = [aws_sns_topic.budget.arn]
     }
   }
+
+  depends_on = [aws_sns_topic_policy.budget]
 }
