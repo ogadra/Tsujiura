@@ -66,8 +66,3 @@ resource "aws_budgets_budget" "main" {
 
   depends_on = [aws_sns_topic_policy.budget]
 }
-
-output "budget_topic_arn" {
-  description = "SNS topic that receives the budget alerts, to subscribe an email address to by hand"
-  value       = aws_sns_topic.budget.arn
-}
