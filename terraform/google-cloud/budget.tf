@@ -1,11 +1,3 @@
-# The Budget API rejects user credentials unless a quota project is set.
-provider "google" {
-  alias                 = "billing"
-  project               = data.google_project.current.project_id
-  billing_project       = data.google_project.current.project_id
-  user_project_override = true
-}
-
 resource "google_project_service" "billingbudgets" {
   service            = "billingbudgets.googleapis.com"
   disable_on_destroy = false
