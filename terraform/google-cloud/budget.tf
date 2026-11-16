@@ -36,7 +36,7 @@ resource "google_billing_budget" "logs_and_dns" {
   # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   provider = google.billing
 
-  billing_account = var.billing_account_id
+  billing_account = data.google_project.current.billing_account
   display_name    = "tsujiura-logs-and-dns"
 
   budget_filter {
