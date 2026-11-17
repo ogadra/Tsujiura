@@ -9,7 +9,10 @@ update-asn:
     aws s3 cp "$dir/GeoLite2-ASN.mmdb" "s3://$s3_bucket/GeoLite2-ASN.mmdb"
     gcloud storage cp "$dir/GeoLite2-ASN.mmdb" "gs://$gcs_bucket/GeoLite2-ASN.mmdb"
 
-deploy-ingest-route53:
+deploy cloud:
+    @"{{just_executable()}}" "_deploy-{{cloud}}"
+
+_deploy-aws:
     #!/usr/bin/env bash
     set -euo pipefail
     : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
