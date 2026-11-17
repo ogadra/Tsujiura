@@ -1,11 +1,3 @@
-locals {
-  public_subnet_cidrs = {
-    "ap-northeast-1a" = "10.0.0.0/24"
-    "ap-northeast-1c" = "10.0.1.0/24"
-    "ap-northeast-1d" = "10.0.2.0/24"
-  }
-}
-
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 
@@ -52,4 +44,19 @@ resource "aws_route_table_association" "public" {
 
   subnet_id      = each.value.id
   route_table_id = aws_route_table.public.id
+}
+
+resource "aws_security_group" "alb" {
+  name        = "tsujiura-alb"
+  description = "HTTPS from the internet to the ALB"
+  vpc_id      = aws_vpc.main.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https" {
+  security_group_id = aws_security_group.alb.id
+  description       = "HTTPS from the internet"
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
 }

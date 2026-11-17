@@ -12,9 +12,12 @@ resource "aws_cloudwatch_log_resource_policy" "route53_query_log" {
   policy_document = data.aws_iam_policy_document.route53_query_log.json
 }
 
-resource "aws_route53_query_log" "tsujiura" {
-  depends_on = [aws_cloudwatch_log_resource_policy.route53_query_log]
+resource "aws_cloudwatch_log_subscription_filter" "ingest_route53" {
+  provider   = aws.use1
+  depends_on = [aws_lambda_permission.ingest_route53]
 
-  cloudwatch_log_group_arn = aws_cloudwatch_log_group.route53_query_log.arn
-  zone_id                  = data.aws_route53_zone.tsujiura.zone_id
+  name            = "tsujiura-ingest-route53"
+  log_group_name  = aws_cloudwatch_log_group.route53_query_log.name
+  filter_pattern  = ""
+  destination_arn = data.aws_lambda_function.ingest_route53.arn
 }

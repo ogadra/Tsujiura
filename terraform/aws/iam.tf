@@ -60,3 +60,19 @@ data "aws_iam_policy_document" "ingest_route53" {
     resources = ["${aws_s3_bucket.asn.arn}/GeoLite2-ASN.mmdb"]
   }
 }
+
+resource "aws_iam_role" "ingest_route53" {
+  name               = "tsujiura-ingest-route53"
+  assume_role_policy = data.aws_iam_policy_document.ingest_route53_assume.json
+}
+
+resource "aws_iam_role_policy" "ingest_route53" {
+  name   = "ingest-route53"
+  role   = aws_iam_role.ingest_route53.id
+  policy = data.aws_iam_policy_document.ingest_route53.json
+}
+
+resource "aws_iam_role_policy_attachment" "ingest_route53_logs" {
+  role       = aws_iam_role.ingest_route53.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
