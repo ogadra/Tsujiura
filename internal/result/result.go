@@ -21,8 +21,8 @@ const readTimeout = 3 * time.Second
 
 // The ingest functions leave the ASN out when the database has no entry for the resolver IP.
 type Record struct {
-	ASN          int64  `json:"asn,omitempty"`
-	Organization string `json:"asOrganization,omitempty"`
+	ASN          int64  `json:"asn,omitempty" firestore:"asn"`
+	Organization string `json:"asOrganization,omitempty" firestore:"asOrganization"`
 }
 
 // Reader reads the record of a token, which is nil when the database has none.
