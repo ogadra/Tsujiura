@@ -1,5 +1,9 @@
 data "aws_caller_identity" "current" {}
 
+data "aws_region" "use1" {
+  provider = aws.use1
+}
+
 data "aws_route53_zone" "tsujiura" {
   name = local.domain_name
 }
