@@ -1,0 +1,16 @@
+{
+  "FunctionName": "tsujiura-result-api",
+  "Role": "{{ tfstate `aws_iam_role.result_api.arn` }}",
+  "PackageType": "Image",
+  "Code": {
+    "ImageUri": "{{ tfstate `aws_ecr_repository.result_api.repository_url` }}:{{ must_env `IMAGE_TAG` }}"
+  },
+  "Architectures": ["x86_64"],
+  "MemorySize": 128,
+  "Timeout": 10,
+  "Environment": {
+    "Variables": {
+      "RESULTS_TABLE_NAME": "{{ tfstate `aws_dynamodb_table.results.name` }}"
+    }
+  }
+}

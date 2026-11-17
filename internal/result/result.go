@@ -3,11 +3,16 @@ package result
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
@@ -78,4 +83,33 @@ func (a Aggregator) Respond(ctx context.Context, token string) (int, []byte) {
 func encode(status int, body any) (int, []byte) {
 	encoded, _ := json.Marshal(body)
 	return status, encoded
+}
+
+type DynamoDB struct {
+	GetItem func(context.Context, *dynamodb.GetItemInput, ...func(*dynamodb.Options)) (*dynamodb.GetItemOutput, error)
+	Table   string
+}
+
+// The two attributes are read by hand, since attributevalue would add a module only for them.
+func (d DynamoDB) Get(ctx context.Context, token string) (*Record, error) {
+	out, err := d.GetItem(ctx, &dynamodb.GetItemInput{
+		TableName: aws.String(d.Table),
+		Key:       map[string]types.AttributeValue{"token": &types.AttributeValueMemberS{Value: token}},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(out.Item) == 0 {
+		return nil, nil
+	}
+	record := &Record{}
+	if asn, ok := out.Item["asn"].(*types.AttributeValueMemberN); ok {
+		if record.ASN, err = strconv.ParseInt(asn.Value, 10, 64); err != nil {
+			return nil, fmt.Errorf("parse asn of %s: %w", token, err)
+		}
+	}
+	if organization, ok := out.Item["asOrganization"].(*types.AttributeValueMemberS); ok {
+		record.Organization = organization.Value
+	}
+	return record, nil
 }
