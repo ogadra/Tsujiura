@@ -1,6 +1,6 @@
 resource "google_project_service" "billingbudgets" {
   service            = "billingbudgets.googleapis.com"
-  disable_on_destroy = false
+  disable_on_destroy = true
 }
 
 resource "google_billing_budget" "main" {

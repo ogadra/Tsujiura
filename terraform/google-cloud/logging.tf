@@ -1,6 +1,6 @@
 resource "google_project_service" "logging" {
   service            = "logging.googleapis.com"
-  disable_on_destroy = false
+  disable_on_destroy = true
 }
 
 resource "google_logging_project_sink" "dns_query_logs" {
