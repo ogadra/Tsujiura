@@ -55,7 +55,11 @@ func newIngester() (*ingester, error) {
 		return nil, errors.New("ASN_DB_PATH is not set")
 	}
 
-	asnDB, err := asn.Open(asnDBPath)
+	asnData, err := os.ReadFile(asnDBPath)
+	if err != nil {
+		return nil, fmt.Errorf("read ASN database: %w", err)
+	}
+	asnDB, err := asn.New(asnData)
 	if err != nil {
 		return nil, err
 	}
