@@ -1,6 +1,6 @@
 resource "google_project_service" "firestore" {
   service            = "firestore.googleapis.com"
-  disable_on_destroy = false
+  disable_on_destroy = true
 }
 
 resource "google_firestore_database" "main" {
