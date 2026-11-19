@@ -9,8 +9,6 @@ import (
 	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
-const token = "550e8400-e29b-41d4-a716-446655440000"
-
 const cloudDNSTimestamp = "2017-12-13T08:16:02.130456789Z"
 
 func cloudDNSEntryJSON(timestamp, name, ip string) []byte {
