@@ -1,18 +1,21 @@
-_validate-vendor vendor:
-    @if [ "{{vendor}}" != "aws" ] && [ "{{vendor}}" != "google-cloud" ]; then echo "Error: vendor must be 'aws' or 'google-cloud', got '{{vendor}}'"; exit 1; fi
-
-_validate-tf-backend-bucket:
-    @if [ -z "${TF_BACKEND_BUCKET:-}" ]; then echo "Error: TF_BACKEND_BUCKET must be set (see .env.example)"; exit 1; fi
-
-init vendor: (_validate-vendor vendor) _validate-tf-backend-bucket
-    terraform -chdir=terraform/{{vendor}} init -reconfigure -backend-config="bucket=${TF_BACKEND_BUCKET}" -backend-config="key=tsujiura/{{vendor}}/terraform.tfstate"
-
-geolite2-asn:
-    curl -fsSL -u "$MAXMIND_ACCOUNT_ID:$MAXMIND_LICENSE_KEY" "https://download.maxmind.com/geoip/databases/GeoLite2-ASN/download?suffix=tar.gz" | tar -xzf - --strip-components=1 --wildcards '*/GeoLite2-ASN.mmdb'
-
-deploy-ingest-route53: _validate-tf-backend-bucket
+update-asn:
     #!/usr/bin/env bash
     set -euo pipefail
+    s3_bucket="$(terraform -chdir=terraform/aws output -raw asn_bucket)"
+    gcs_bucket="$(terraform -chdir=terraform/google-cloud output -raw asn_bucket)"
+    dir="$(mktemp -d)"
+    trap 'rm -rf "$dir"' EXIT
+    curl -fsSL -u "$MAXMIND_ACCOUNT_ID:$MAXMIND_LICENSE_KEY" "https://download.maxmind.com/geoip/databases/GeoLite2-ASN/download?suffix=tar.gz" | tar -xzf - -C "$dir" --strip-components=1 --wildcards '*/GeoLite2-ASN.mmdb'
+    aws s3 cp "$dir/GeoLite2-ASN.mmdb" "s3://$s3_bucket/GeoLite2-ASN.mmdb"
+    gcloud storage cp "$dir/GeoLite2-ASN.mmdb" "gs://$gcs_bucket/GeoLite2-ASN.mmdb"
+
+deploy cloud:
+    @"{{just_executable()}}" "_deploy-{{cloud}}"
+
+_deploy-aws:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
     repository="$(terraform -chdir=terraform/aws output -raw ingest_route53_repository_url)"
     export IMAGE_TAG="$(git rev-parse --short HEAD)"
     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${repository%%/*}"
@@ -20,9 +23,10 @@ deploy-ingest-route53: _validate-tf-backend-bucket
     docker push "$repository:$IMAGE_TAG"
     lambroll deploy --function lambda/ingest-route53/function.json --region us-east-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
 
-deploy-ingest-cloud-dns: _validate-tf-backend-bucket
+deploy-ingest-cloud-dns:
     #!/usr/bin/env bash
     set -euo pipefail
+    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
     service_account="$(terraform -chdir=terraform/google-cloud output -raw ingest_cloud_dns_service_account)"
     trigger_service_account="$(terraform -chdir=terraform/google-cloud output -raw ingest_cloud_dns_trigger_service_account)"
     topic="$(terraform -chdir=terraform/google-cloud output -raw dns_query_logs_topic)"
