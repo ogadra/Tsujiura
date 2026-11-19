@@ -24,7 +24,13 @@ resource "google_project_iam_member" "ingest_cloud_dns_firestore" {
   member  = google_service_account.ingest_cloud_dns.member
 }
 
-# Separate from the runtime account, which may only write to Firestore.
+resource "google_storage_bucket_iam_member" "ingest_cloud_dns_asn" {
+  bucket = google_storage_bucket.asn.name
+  role   = "roles/storage.objectViewer"
+  member = google_service_account.ingest_cloud_dns.member
+}
+
+# Separate from the runtime account, which holds the access to Firestore and the ASN bucket.
 resource "google_service_account" "ingest_cloud_dns_trigger" {
   account_id   = "tsujiura-ingest-dns-trigger"
   display_name = "Tsujiura Cloud DNS ingest trigger"
