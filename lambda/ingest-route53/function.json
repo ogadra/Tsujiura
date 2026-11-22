@@ -12,7 +12,7 @@
     "Variables": {
       "RESULTS_TABLE_NAME": "{{ tfstate `aws_dynamodb_table.results.name` }}",
       "RESULTS_TABLE_REGION": "ap-northeast-1",
-      "ASN_DB_PATH": "/var/task/GeoLite2-ASN.mmdb"
+      "ASN_BUCKET": "{{ tfstate `aws_s3_bucket.asn.bucket` }}"
     }
   }
 }
