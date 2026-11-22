@@ -38,7 +38,7 @@ data "aws_iam_policy_document" "route53_query_log" {
   }
 }
 
-data "aws_iam_policy_document" "ingest_route53_assume" {
+data "aws_iam_policy_document" "lambda_assume" {
   statement {
     actions = ["sts:AssumeRole"]
 
@@ -63,7 +63,7 @@ data "aws_iam_policy_document" "ingest_route53" {
 
 resource "aws_iam_role" "ingest_route53" {
   name               = "tsujiura-ingest-route53"
-  assume_role_policy = data.aws_iam_policy_document.ingest_route53_assume.json
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
 resource "aws_iam_role_policy" "ingest_route53" {
@@ -79,7 +79,7 @@ resource "aws_iam_role_policy_attachment" "ingest_route53_logs" {
 
 resource "aws_iam_role" "result_api" {
   name               = "tsujiura-result-api"
-  assume_role_policy = data.aws_iam_policy_document.ingest_route53_assume.json
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
 data "aws_iam_policy_document" "result_api" {
