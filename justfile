@@ -37,7 +37,6 @@ _deploy-google-cloud:
     topic="$(terraform -chdir=terraform/google-cloud output -raw dns_query_logs_topic)"
     asn_bucket="$(terraform -chdir=terraform/google-cloud output -raw asn_bucket)"
     result_api_service_account="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
-    # Go functions must sit at the module root, so stage the package there under the same module path.
     ingest_source_dir="$(mktemp -d)"
     result_api_source_dir="$(mktemp -d)"
     trap 'rm -rf "$ingest_source_dir" "$result_api_source_dir"' EXIT

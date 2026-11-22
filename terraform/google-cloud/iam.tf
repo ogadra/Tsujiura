@@ -50,7 +50,6 @@ resource "google_service_account" "result_api" {
   display_name = "Tsujiura result API function"
 }
 
-# roles/datastore.viewer also lists documents and reads the database metadata.
 resource "google_project_iam_custom_role" "result_api" {
   role_id = "tsujiuraResultApi"
   title   = "Tsujiura result API"
