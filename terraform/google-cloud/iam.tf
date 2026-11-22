@@ -33,10 +33,14 @@ resource "google_service_account" "ingest_cloud_dns_trigger" {
   display_name = "Tsujiura Cloud DNS ingest trigger"
 }
 
-resource "google_project_iam_member" "ingest_cloud_dns_trigger" {
-  for_each = toset(["roles/eventarc.eventReceiver", "roles/run.invoker"])
-
+resource "google_project_iam_member" "ingest_cloud_dns_trigger_event_receiver" {
   project = data.google_project.current.project_id
-  role    = each.value
+  role    = "roles/eventarc.eventReceiver"
+  member  = google_service_account.ingest_cloud_dns_trigger.member
+}
+
+resource "google_project_iam_member" "ingest_cloud_dns_trigger_invoker" {
+  project = data.google_project.current.project_id
+  role    = "roles/run.invoker"
   member  = google_service_account.ingest_cloud_dns_trigger.member
 }
