@@ -31,7 +31,6 @@ _deploy-google-cloud:
     trigger_service_account="$(terraform -chdir=terraform/google-cloud output -raw ingest_cloud_dns_trigger_service_account)"
     topic="$(terraform -chdir=terraform/google-cloud output -raw dns_query_logs_topic)"
     asn_bucket="$(terraform -chdir=terraform/google-cloud output -raw asn_bucket)"
-    # Go functions must sit at the module root, so stage the package there under the same module path.
     source_dir="$(mktemp -d)"
     trap 'rm -rf "$source_dir"' EXIT
     cp -r go.mod go.sum internal functions/ingest-cloud-dns/. "$source_dir"
