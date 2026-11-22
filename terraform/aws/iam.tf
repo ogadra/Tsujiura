@@ -76,3 +76,26 @@ resource "aws_iam_role_policy_attachment" "ingest_route53_logs" {
   role       = aws_iam_role.ingest_route53.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+resource "aws_iam_role" "result_api" {
+  name               = "tsujiura-result-api"
+  assume_role_policy = data.aws_iam_policy_document.ingest_route53_assume.json
+}
+
+data "aws_iam_policy_document" "result_api" {
+  statement {
+    actions   = ["dynamodb:GetItem"]
+    resources = [aws_dynamodb_table.results.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "result_api" {
+  name   = "read-results"
+  role   = aws_iam_role.result_api.id
+  policy = data.aws_iam_policy_document.result_api.json
+}
+
+resource "aws_iam_role_policy_attachment" "result_api_logs" {
+  role       = aws_iam_role.result_api.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
