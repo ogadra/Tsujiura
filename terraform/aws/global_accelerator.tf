@@ -23,8 +23,3 @@ resource "aws_globalaccelerator_endpoint_group" "alb" {
     client_ip_preservation_enabled = true
   }
 }
-
-output "global_accelerator_ips" {
-  description = "Static IPs of the Global Accelerator to pass to the frontend A records"
-  value       = one(aws_globalaccelerator_accelerator.main.ip_sets).ip_addresses
-}
