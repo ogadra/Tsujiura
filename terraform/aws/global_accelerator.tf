@@ -16,7 +16,7 @@ resource "aws_globalaccelerator_listener" "https" {
 
 resource "aws_globalaccelerator_endpoint_group" "alb" {
   listener_arn          = aws_globalaccelerator_listener.https.arn
-  endpoint_group_region = "ap-northeast-1"
+  endpoint_group_region = data.aws_region.current.region
 
   endpoint_configuration {
     endpoint_id                    = aws_lb.main.arn
