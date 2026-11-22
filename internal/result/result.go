@@ -16,16 +16,13 @@ import (
 	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
-// readTimeout turns a hanging database into a 503 that names it.
 const readTimeout = 3 * time.Second
 
-// The ingest functions leave the ASN out when the database has no entry for the resolver IP.
 type Record struct {
 	ASN          int64  `json:"asn,omitempty"`
 	Organization string `json:"asOrganization,omitempty"`
 }
 
-// Reader reads the record of a token, which is nil when the database has none.
 type Reader interface {
 	Get(ctx context.Context, token string) (*Record, error)
 }
@@ -79,7 +76,6 @@ func (a Aggregator) Respond(ctx context.Context, token string) (int, []byte) {
 	return encode(http.StatusOK, found)
 }
 
-// encode ignores the error because the response bodies always marshal.
 func encode(status int, body any) (int, []byte) {
 	encoded, _ := json.Marshal(body)
 	return status, encoded

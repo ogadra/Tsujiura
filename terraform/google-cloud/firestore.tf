@@ -1,6 +1,6 @@
 resource "google_project_service" "firestore" {
   service            = "firestore.googleapis.com"
-  disable_on_destroy = false
+  disable_on_destroy = true
 }
 
 resource "google_firestore_database" "main" {
@@ -16,7 +16,6 @@ resource "google_firestore_field" "results_expires_at" {
   collection = "results"
   field      = "expiresAt"
 
-  # The ingest function writes expiresAt as a timestamp, one day after the query.
   ttl_config {}
 
   # TTL field does not need single-field indexes.
