@@ -22,3 +22,27 @@ _deploy-aws:
     docker build --platform linux/amd64 --provenance=false -f lambda/ingest-route53/Dockerfile -t "$repository:$IMAGE_TAG" .
     docker push "$repository:$IMAGE_TAG"
     lambroll deploy --function lambda/ingest-route53/function.json --region us-east-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
+
+_deploy-google-cloud:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
+    service_account="$(terraform -chdir=terraform/google-cloud output -raw ingest_cloud_dns_service_account)"
+    trigger_service_account="$(terraform -chdir=terraform/google-cloud output -raw ingest_cloud_dns_trigger_service_account)"
+    topic="$(terraform -chdir=terraform/google-cloud output -raw dns_query_logs_topic)"
+    asn_bucket="$(terraform -chdir=terraform/google-cloud output -raw asn_bucket)"
+    source_dir="$(mktemp -d)"
+    trap 'rm -rf "$source_dir"' EXIT
+    cp -r go.mod go.sum internal functions/ingest-cloud-dns/. "$source_dir"
+    gcloud functions deploy tsujiura-ingest-cloud-dns \
+      --gen2 \
+      --region=asia-northeast1 \
+      --runtime=go127 \
+      --source="$source_dir" \
+      --entry-point=IngestCloudDNS \
+      --trigger-topic="$topic" \
+      --trigger-service-account="$trigger_service_account" \
+      --service-account="$service_account" \
+      --no-allow-unauthenticated \
+      --retry \
+      --set-env-vars="FIRESTORE_COLLECTION=results,ASN_BUCKET=$asn_bucket"
