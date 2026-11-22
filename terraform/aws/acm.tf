@@ -12,23 +12,3 @@ resource "aws_acm_certificate" "main" {
 resource "aws_acm_certificate_validation" "main" {
   certificate_arn = aws_acm_certificate.main.arn
 }
-
-locals {
-  # ACM lists the shared record once per name, so collapse it before one().
-  acm_validation = one(distinct([
-    for option in aws_acm_certificate.main.domain_validation_options : {
-      name  = option.resource_record_name
-      value = option.resource_record_value
-    }
-  ]))
-}
-
-output "acm_validation_cname_name" {
-  description = "Name of the ACM validation CNAME"
-  value       = local.acm_validation.name
-}
-
-output "acm_validation_cname_value" {
-  description = "Value of the ACM validation CNAME"
-  value       = local.acm_validation.value
-}
