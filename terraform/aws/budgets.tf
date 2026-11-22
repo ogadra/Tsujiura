@@ -15,16 +15,20 @@ resource "aws_budgets_budget" "main" {
     values = [format("user:%s$%s", aws_ce_cost_allocation_tag.project.tag_key, local.common_tags.Project)]
   }
 
-  dynamic "notification" {
-    for_each = [80, 100]
+  notification {
+    comparison_operator       = "GREATER_THAN"
+    notification_type         = "ACTUAL"
+    threshold                 = 80
+    threshold_type            = "PERCENTAGE"
+    subscriber_sns_topic_arns = [aws_sns_topic.budget.arn]
+  }
 
-    content {
-      comparison_operator       = "GREATER_THAN"
-      notification_type         = "ACTUAL"
-      threshold                 = notification.value
-      threshold_type            = "PERCENTAGE"
-      subscriber_sns_topic_arns = [aws_sns_topic.budget.arn]
-    }
+  notification {
+    comparison_operator       = "GREATER_THAN"
+    notification_type         = "ACTUAL"
+    threshold                 = 100
+    threshold_type            = "PERCENTAGE"
+    subscriber_sns_topic_arns = [aws_sns_topic.budget.arn]
   }
 
   depends_on = [aws_sns_topic_policy.budget]
