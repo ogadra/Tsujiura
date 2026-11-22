@@ -44,3 +44,21 @@ resource "google_project_iam_member" "ingest_cloud_dns_trigger_invoker" {
   role    = "roles/run.invoker"
   member  = google_service_account.ingest_cloud_dns_trigger.member
 }
+
+resource "google_service_account" "result_api" {
+  account_id   = "tsujiura-result-api"
+  display_name = "Tsujiura result API function"
+}
+
+resource "google_project_iam_custom_role" "result_api" {
+  role_id = "tsujiuraResultApi"
+  title   = "Tsujiura result API"
+
+  permissions = ["datastore.entities.get"]
+}
+
+resource "google_project_iam_member" "result_api_firestore" {
+  project = data.google_project.current.project_id
+  role    = google_project_iam_custom_role.result_api.id
+  member  = google_service_account.result_api.member
+}

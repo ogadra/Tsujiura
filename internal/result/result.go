@@ -19,8 +19,8 @@ import (
 const readTimeout = 3 * time.Second
 
 type Record struct {
-	ASN          int64  `json:"asn,omitempty"`
-	Organization string `json:"asOrganization,omitempty"`
+	ASN          int64  `json:"asn,omitempty" firestore:"asn"`
+	Organization string `json:"asOrganization,omitempty" firestore:"asOrganization"`
 }
 
 type Reader interface {
