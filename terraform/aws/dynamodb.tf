@@ -8,7 +8,6 @@ resource "aws_dynamodb_table" "results" {
     type = "S"
   }
 
-  # The ingest Lambda writes expiresAt as epoch seconds, one day after the query.
   ttl {
     attribute_name = "expiresAt"
     enabled        = true
