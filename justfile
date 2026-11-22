@@ -16,22 +16,16 @@ _deploy-aws:
     #!/usr/bin/env bash
     set -euo pipefail
     : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
-    repository="$(terraform -chdir=terraform/aws output -raw ingest_route53_repository_url)"
+    ingest_repository="$(terraform -chdir=terraform/aws output -raw ingest_route53_repository_url)"
+    result_api_repository="$(terraform -chdir=terraform/aws output -raw result_api_repository_url)"
     export IMAGE_TAG="$(git rev-parse --short HEAD)"
-    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${repository%%/*}"
-    docker build --platform linux/amd64 --provenance=false -f lambda/ingest-route53/Dockerfile -t "$repository:$IMAGE_TAG" .
-    docker push "$repository:$IMAGE_TAG"
+    aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${ingest_repository%%/*}"
+    docker build --platform linux/amd64 --provenance=false -f lambda/ingest-route53/Dockerfile -t "$ingest_repository:$IMAGE_TAG" .
+    docker push "$ingest_repository:$IMAGE_TAG"
     lambroll deploy --function lambda/ingest-route53/function.json --region us-east-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
-
-deploy-result-api:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
-    repository="$(terraform -chdir=terraform/aws output -raw result_api_repository_url)"
-    export IMAGE_TAG="$(git rev-parse --short HEAD)"
-    aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${repository%%/*}"
-    docker build --platform linux/amd64 --provenance=false -f lambda/result-api/Dockerfile -t "$repository:$IMAGE_TAG" .
-    docker push "$repository:$IMAGE_TAG"
+    aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${result_api_repository%%/*}"
+    docker build --platform linux/amd64 --provenance=false -f lambda/result-api/Dockerfile -t "$result_api_repository:$IMAGE_TAG" .
+    docker push "$result_api_repository:$IMAGE_TAG"
     lambroll deploy --function lambda/result-api/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
 
 _deploy-google-cloud:
