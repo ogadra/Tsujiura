@@ -17,3 +17,8 @@ output "dns_query_logs_topic" {
   description = "Read by the _deploy-google-cloud recipe in justfile."
   value       = google_pubsub_topic.dns_query_logs.name
 }
+
+output "result_api_service_account" {
+  description = "Read by the _deploy-google-cloud recipe in justfile."
+  value       = google_service_account.result_api.email
+}
