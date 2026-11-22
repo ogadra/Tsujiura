@@ -1,4 +1,3 @@
-# The wildcard serves provider.svg on the token names.
 resource "aws_acm_certificate" "main" {
   domain_name               = local.domain_name
   subject_alternative_names = ["*.${local.domain_name}"]
