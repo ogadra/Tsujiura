@@ -86,7 +86,6 @@ type DynamoDB struct {
 	Table   string
 }
 
-// The two attributes are read by hand, since attributevalue would add a module only for them.
 func (d DynamoDB) Get(ctx context.Context, token string) (*Record, error) {
 	out, err := d.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(d.Table),
