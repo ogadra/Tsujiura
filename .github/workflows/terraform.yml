@@ -24,10 +24,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-      - uses: cachix/install-nix-action@bb0495a1086c46893eee56f32fd192dfe4a15bb9  # v32.0.0
-      - run: nix develop -c terraform fmt -check
-      - run: nix develop -c terraform init -backend=false
-      - run: nix develop -c terraform validate
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e  # v4.0.1
+        with:
+          terraform_version: "1.17.1"
+          terraform_wrapper: false
+      - run: terraform fmt -check
+      - run: terraform init -backend=false
+      - run: terraform validate
 
   checkov:
     runs-on: ubuntu-latest
@@ -35,5 +38,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-      - uses: cachix/install-nix-action@bb0495a1086c46893eee56f32fd192dfe4a15bb9  # v32.0.0
-      - run: nix develop -c checkov -d . --quiet --compact --external-checks-dir terraform/checkov
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+        with:
+          python-version: "3.13.13"
+      - run: pip install checkov==3.2.530
+      - run: checkov -d . --quiet --compact --external-checks-dir terraform/checkov
