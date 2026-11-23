@@ -7,3 +7,7 @@ resource "aws_ecr_repository" "ingest_route53" {
 resource "aws_ecr_repository" "result_api" {
   name = "tsujiura-result-api"
 }
+
+resource "aws_ecr_repository" "frontend" {
+  name = "tsujiura-frontend"
+}
