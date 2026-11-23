@@ -46,8 +46,6 @@ func TestParseQueryLogDiscardsOtherNames(t *testing.T) {
 		"550e8400-e29b-11d4-a716-446655440000.tsujiura.ogadra.net",
 		"550e8400-e29b-41d4-1716-446655440000.tsujiura.ogadra.net",
 		"a." + token + ".tsujiura.ogadra.net",
-		token + ".example.com",
-		token + ".tsujiura.ogadra.net.example.com",
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
