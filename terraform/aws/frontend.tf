@@ -20,61 +20,76 @@ data "aws_lambda_function" "result_api" {
   function_name = "tsujiura-result-api"
 }
 
-locals {
-  alb_lambda_targets = {
-    frontend = {
-      function = data.aws_lambda_function.frontend
-      paths    = ["/", "/provider.svg"]
-      priority = 10
-    }
-    result_api = {
-      function = data.aws_lambda_function.result_api
-      paths    = ["/api/result"]
-      priority = 20
-    }
-  }
-}
-
-resource "aws_lb_target_group" "lambda" {
-  for_each = local.alb_lambda_targets
-
-  name        = each.value.function.function_name
+resource "aws_lb_target_group" "frontend" {
+  name        = data.aws_lambda_function.frontend.function_name
   target_type = "lambda"
 
   lambda_multi_value_headers_enabled = false
 }
 
-resource "aws_lambda_permission" "alb" {
-  for_each = local.alb_lambda_targets
-
+resource "aws_lambda_permission" "frontend" {
   action        = "lambda:InvokeFunction"
-  function_name = each.value.function.function_name
+  function_name = data.aws_lambda_function.frontend.function_name
   principal     = "elasticloadbalancing.amazonaws.com"
-  source_arn    = aws_lb_target_group.lambda[each.key].arn
+  source_arn    = aws_lb_target_group.frontend.arn
 }
 
-resource "aws_lb_target_group_attachment" "lambda" {
-  for_each   = local.alb_lambda_targets
-  depends_on = [aws_lambda_permission.alb]
+resource "aws_lb_target_group_attachment" "frontend" {
+  depends_on = [aws_lambda_permission.frontend]
 
-  target_group_arn = aws_lb_target_group.lambda[each.key].arn
-  target_id        = each.value.function.arn
+  target_group_arn = aws_lb_target_group.frontend.arn
+  target_id        = data.aws_lambda_function.frontend.arn
 }
 
-resource "aws_lb_listener_rule" "lambda" {
-  for_each = local.alb_lambda_targets
-
+resource "aws_lb_listener_rule" "frontend" {
   listener_arn = aws_lb_listener.tsujiura_https.arn
-  priority     = each.value.priority
+  priority     = 10
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.lambda[each.key].arn
+    target_group_arn = aws_lb_target_group.frontend.arn
   }
 
   condition {
     path_pattern {
-      values = each.value.paths
+      values = ["/", "/provider.svg"]
+    }
+  }
+}
+
+resource "aws_lb_target_group" "result_api" {
+  name        = data.aws_lambda_function.result_api.function_name
+  target_type = "lambda"
+
+  lambda_multi_value_headers_enabled = false
+}
+
+resource "aws_lambda_permission" "result_api" {
+  action        = "lambda:InvokeFunction"
+  function_name = data.aws_lambda_function.result_api.function_name
+  principal     = "elasticloadbalancing.amazonaws.com"
+  source_arn    = aws_lb_target_group.result_api.arn
+}
+
+resource "aws_lb_target_group_attachment" "result_api" {
+  depends_on = [aws_lambda_permission.result_api]
+
+  target_group_arn = aws_lb_target_group.result_api.arn
+  target_id        = data.aws_lambda_function.result_api.arn
+}
+
+resource "aws_lb_listener_rule" "result_api" {
+  listener_arn = aws_lb_listener.tsujiura_https.arn
+  priority     = 20
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.result_api.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/result"]
     }
   }
 }
