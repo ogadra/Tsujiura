@@ -1,11 +1,11 @@
-resource "aws_globalaccelerator_accelerator" "main" {
+resource "aws_globalaccelerator_accelerator" "tsujiura" {
   name            = "tsujiura"
   ip_address_type = "IPV4"
   enabled         = true
 }
 
-resource "aws_globalaccelerator_listener" "https" {
-  accelerator_arn = aws_globalaccelerator_accelerator.main.arn
+resource "aws_globalaccelerator_listener" "tsujiura_https" {
+  accelerator_arn = aws_globalaccelerator_accelerator.tsujiura.arn
   protocol        = "TCP"
 
   port_range {
@@ -14,12 +14,12 @@ resource "aws_globalaccelerator_listener" "https" {
   }
 }
 
-resource "aws_globalaccelerator_endpoint_group" "alb" {
-  listener_arn          = aws_globalaccelerator_listener.https.arn
+resource "aws_globalaccelerator_endpoint_group" "tsujiura_alb" {
+  listener_arn          = aws_globalaccelerator_listener.tsujiura_https.arn
   endpoint_group_region = data.aws_region.current.region
 
   endpoint_configuration {
-    endpoint_id                    = aws_lb.main.arn
+    endpoint_id                    = aws_lb.tsujiura.arn
     client_ip_preservation_enabled = true
   }
 }
