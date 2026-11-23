@@ -10,8 +10,7 @@ import (
 )
 
 var assets = map[string]struct{ file, contentType string }{
-	"/": {"index.html", "text/html; charset=utf-8"},
-	// Width 1 tells the page that Route53 answered.
+	"/":             {"index.html", "text/html; charset=utf-8"},
 	"/provider.svg": {"provider/aws.svg", "image/svg+xml"},
 }
 

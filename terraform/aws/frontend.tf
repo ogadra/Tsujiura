@@ -12,7 +12,6 @@ resource "aws_iam_role_policy_attachment" "frontend_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# lambroll owns the functions, so they must be deployed before these can be read.
 data "aws_lambda_function" "frontend" {
   function_name = "tsujiura-frontend"
 }
@@ -42,7 +41,6 @@ resource "aws_lb_target_group" "lambda" {
   name        = each.value.function.function_name
   target_type = "lambda"
 
-  # The result API reads the token from the single-value query string parameters.
   lambda_multi_value_headers_enabled = false
 }
 
