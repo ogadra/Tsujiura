@@ -4,7 +4,55 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tsujiura</title>
-  <script type="module" src="/main.js"></script>
+  <script type="module">
+    const DOMAIN = "tsujiura.ogadra.net";
+    const TOKEN_COUNT = 10;
+    const POLL_INTERVAL_MS = 2000;
+    const POLL_TIMEOUT_MS = 60000;
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const PROVIDER_BY_WIDTH = { 1: "route53", 2: "cloudDns" };
+
+    function probeToken(token, deadline) {
+      return new Promise((resolve) => {
+        const image = new Image();
+        image.onload = () => resolve(PROVIDER_BY_WIDTH[image.naturalWidth] ?? null);
+        image.onerror = () => resolve(null);
+        setTimeout(() => resolve(null), deadline - Date.now());
+        image.src = `https://${token}.${DOMAIN}/provider.svg`;
+      });
+    }
+
+    async function fetchResult(token) {
+      const response = await fetch(`/api/result?token=${token}`);
+      return { status: response.status, body: await response.json() };
+    }
+
+    async function pollToken(token, deadline) {
+      for (;;) {
+        const result = await fetchResult(token);
+        const recorded = result.body.route53 || result.body.cloudDns;
+        if (result.status !== 200 || recorded || Date.now() + POLL_INTERVAL_MS >= deadline) {
+          return { token, ...result };
+        }
+        await sleep(POLL_INTERVAL_MS);
+      }
+    }
+
+    async function measure() {
+      const tokens = Array.from({ length: TOKEN_COUNT }, () => crypto.randomUUID());
+      const deadline = Date.now() + POLL_TIMEOUT_MS;
+      return Promise.all(
+        tokens.map(async (token) => {
+          const [answeredBy, result] = await Promise.all([probeToken(token, deadline), pollToken(token, deadline)]);
+          return { answeredBy, ...result };
+        }),
+      );
+    }
+
+    measure();
+  </script>
 </head>
 <body>
   <h1>Tsujiura</h1>
