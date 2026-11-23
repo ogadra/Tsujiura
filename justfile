@@ -18,6 +18,7 @@ _deploy-aws:
     : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
     ingest_repository="$(terraform -chdir=terraform/aws output -raw ingest_route53_repository_url)"
     result_api_repository="$(terraform -chdir=terraform/aws output -raw result_api_repository_url)"
+    frontend_repository="$(terraform -chdir=terraform/aws output -raw frontend_repository_url)"
     export IMAGE_TAG="$(git rev-parse --short HEAD)"
     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${ingest_repository%%/*}"
     docker build --platform linux/amd64 --provenance=false -f lambda/ingest-route53/Dockerfile -t "$ingest_repository:$IMAGE_TAG" .
@@ -27,16 +28,9 @@ _deploy-aws:
     docker build --platform linux/amd64 --provenance=false -f lambda/result-api/Dockerfile -t "$result_api_repository:$IMAGE_TAG" .
     docker push "$result_api_repository:$IMAGE_TAG"
     lambroll deploy --function lambda/result-api/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
-
-deploy-frontend:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
-    repository="$(terraform -chdir=terraform/aws output -raw frontend_repository_url)"
-    export IMAGE_TAG="$(git rev-parse --short HEAD)"
-    aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${repository%%/*}"
-    docker build --platform linux/amd64 --provenance=false -f lambda/frontend/Dockerfile -t "$repository:$IMAGE_TAG" .
-    docker push "$repository:$IMAGE_TAG"
+    aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${frontend_repository%%/*}"
+    docker build --platform linux/amd64 --provenance=false -f lambda/frontend/Dockerfile -t "$frontend_repository:$IMAGE_TAG" .
+    docker push "$frontend_repository:$IMAGE_TAG"
     lambroll deploy --function lambda/frontend/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
 
 _deploy-google-cloud:
