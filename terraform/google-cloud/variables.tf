@@ -1,8 +1,3 @@
-variable "billing_account_id" {
-  description = "Cloud Billing account ID that owns the budget"
-  type        = string
-}
-
 variable "budget_amount_units" {
   description = "Monthly budget for log and DNS query costs in whole units of the billing account currency"
   type        = string

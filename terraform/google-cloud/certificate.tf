@@ -1,4 +1,5 @@
 resource "google_project_service" "certificate_manager" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   service            = "certificatemanager.googleapis.com"
   disable_on_destroy = false
 }
@@ -6,6 +7,8 @@ resource "google_project_service" "certificate_manager" {
 resource "google_certificate_manager_dns_authorization" "frontend" {
   name   = "tsujiura-frontend"
   domain = local.domain_name
+
+  labels = local.common_labels
 
   depends_on = [google_project_service.certificate_manager]
 }
@@ -18,10 +21,14 @@ resource "google_certificate_manager_certificate" "frontend" {
     domains            = [local.domain_name, "*.${local.domain_name}"]
     dns_authorizations = [google_certificate_manager_dns_authorization.frontend.id]
   }
+
+  labels = local.common_labels
 }
 
 resource "google_certificate_manager_certificate_map" "frontend" {
   name = "tsujiura-frontend"
+
+  labels = local.common_labels
 
   depends_on = [google_project_service.certificate_manager]
 }
@@ -36,9 +43,12 @@ resource "google_certificate_manager_certificate_map_entry" "frontend" {
   map          = google_certificate_manager_certificate_map.frontend.name
   hostname     = each.value
   certificates = [google_certificate_manager_certificate.frontend.id]
+
+  labels = local.common_labels
 }
 
 resource "google_compute_target_https_proxy" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   name            = "tsujiura-frontend"
   url_map         = google_compute_url_map.frontend.id
   certificate_map = "//certificatemanager.googleapis.com/${google_certificate_manager_certificate_map.frontend.id}"
@@ -49,6 +59,8 @@ resource "google_compute_global_forwarding_rule" "frontend" {
   target     = google_compute_target_https_proxy.frontend.id
   ip_address = google_compute_global_address.frontend.address
   port_range = "443"
+
+  labels = local.common_labels
 }
 
 output "certificate_validation_cname_name" {

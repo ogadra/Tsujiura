@@ -6,19 +6,28 @@ locals {
 }
 
 resource "aws_vpc" "main" {
+  # checkov:skip=CKV2_AWS_11:The VPC only holds the ALB
   cidr_block = "10.0.0.0/16"
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura"
-  }
+  })
+}
+
+resource "aws_default_security_group" "main" {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.common_tags, {
+    Name = "tsujiura-default"
+  })
 }
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura"
-  }
+  })
 }
 
 resource "aws_subnet" "public" {
@@ -28,9 +37,9 @@ resource "aws_subnet" "public" {
   availability_zone = each.key
   cidr_block        = each.value
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura-public-${each.key}"
-  }
+  })
 }
 
 resource "aws_route_table" "public" {
@@ -41,12 +50,13 @@ resource "aws_route_table" "public" {
     gateway_id = aws_internet_gateway.main.id
   }
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura-public"
-  }
+  })
 }
 
 resource "aws_route_table_association" "public" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   for_each = aws_subnet.public
 
   subnet_id      = each.value.id

@@ -3,10 +3,12 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    # Newer nixos-unstable revisions have no cached checkov, and building it fails in bc-detect-secrets tests.
+    nixpkgs-checkov.url = "github:NixOS/nixpkgs/331800de5053fcebacf6813adb5db9c9dca22a0c";
   };
 
   outputs =
-    { nixpkgs, ... }:
+    { nixpkgs, nixpkgs-checkov, ... }:
     let
       system = "x86_64-linux";
 
@@ -33,6 +35,7 @@
       devShells.${system}.default = pkgs.mkShell {
         packages = with pkgs; [
           awscli2
+          nixpkgs-checkov.legacyPackages.${system}.checkov
           dig
           go
           google-cloud-sdk

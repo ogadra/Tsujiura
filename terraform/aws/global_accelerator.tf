@@ -1,10 +1,14 @@
 resource "aws_globalaccelerator_accelerator" "main" {
+  # checkov:skip=CKV_AWS_75:Flow logs are not used
   name            = "tsujiura"
   ip_address_type = "IPV4"
   enabled         = true
+
+  tags = local.common_tags
 }
 
 resource "aws_globalaccelerator_listener" "https" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   accelerator_arn = aws_globalaccelerator_accelerator.main.arn
   protocol        = "TCP"
 
@@ -15,6 +19,7 @@ resource "aws_globalaccelerator_listener" "https" {
 }
 
 resource "aws_globalaccelerator_endpoint_group" "alb" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   listener_arn          = aws_globalaccelerator_listener.https.arn
   endpoint_group_region = "ap-northeast-1"
 

@@ -1,7 +1,15 @@
 resource "aws_ecr_repository" "ingest_route53" {
+  # checkov:skip=CKV_AWS_136:AWS managed encryption is sufficient
+  # checkov:skip=CKV_AWS_51:Redeploying a commit pushes its short SHA tag again
   provider = aws.use1
 
   name = "tsujiura-ingest-route53"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = local.common_tags
 }
 
 data "aws_iam_policy_document" "ingest_route53_assume" {
@@ -18,6 +26,8 @@ data "aws_iam_policy_document" "ingest_route53_assume" {
 resource "aws_iam_role" "ingest_route53" {
   name               = "tsujiura-ingest-route53"
   assume_role_policy = data.aws_iam_policy_document.ingest_route53_assume.json
+
+  tags = local.common_tags
 }
 
 data "aws_iam_policy_document" "ingest_route53" {
@@ -28,12 +38,14 @@ data "aws_iam_policy_document" "ingest_route53" {
 }
 
 resource "aws_iam_role_policy" "ingest_route53" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   name   = "put-results"
   role   = aws_iam_role.ingest_route53.id
   policy = data.aws_iam_policy_document.ingest_route53.json
 }
 
 resource "aws_iam_role_policy_attachment" "ingest_route53_logs" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   role       = aws_iam_role.ingest_route53.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
@@ -46,6 +58,7 @@ data "aws_lambda_function" "ingest_route53" {
 }
 
 resource "aws_lambda_permission" "ingest_route53" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   provider = aws.use1
 
   action        = "lambda:InvokeFunction"
@@ -55,6 +68,7 @@ resource "aws_lambda_permission" "ingest_route53" {
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "ingest_route53" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   provider   = aws.use1
   depends_on = [aws_lambda_permission.ingest_route53]
 

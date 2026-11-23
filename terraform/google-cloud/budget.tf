@@ -7,6 +7,7 @@ provider "google" {
 }
 
 resource "google_project_service" "budget" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   for_each = toset([
     "billingbudgets.googleapis.com",
     "monitoring.googleapis.com",
@@ -26,13 +27,16 @@ resource "google_monitoring_notification_channel" "budget" {
     email_address = each.value
   }
 
+  user_labels = local.common_labels
+
   depends_on = [google_project_service.budget]
 }
 
 resource "google_billing_budget" "logs_and_dns" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   provider = google.billing
 
-  billing_account = var.billing_account_id
+  billing_account = data.google_project.current.billing_account
   display_name    = "tsujiura-logs-and-dns"
 
   budget_filter {
