@@ -4,7 +4,7 @@ resource "aws_ecr_repository" "frontend" {
 
 resource "aws_iam_role" "frontend" {
   name               = "tsujiura-frontend"
-  assume_role_policy = data.aws_iam_policy_document.ingest_route53_assume.json
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
 }
 
 resource "aws_iam_role_policy_attachment" "frontend_logs" {
@@ -66,7 +66,7 @@ resource "aws_lb_target_group_attachment" "lambda" {
 resource "aws_lb_listener_rule" "lambda" {
   for_each = local.alb_lambda_targets
 
-  listener_arn = aws_lb_listener.https.arn
+  listener_arn = aws_lb_listener.tsujiura_https.arn
   priority     = each.value.priority
 
   action {

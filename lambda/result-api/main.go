@@ -15,7 +15,6 @@ import (
 	"github.com/ogadra/Tsujiura/internal/result"
 )
 
-// unreadableFirestore stands in until the Lambda can authenticate to Google Cloud.
 type unreadableFirestore struct{}
 
 func (unreadableFirestore) Get(context.Context, string) (*result.Record, error) {
