@@ -1,12 +1,10 @@
 const DOMAIN = "tsujiura.ogadra.net";
 const TOKEN_COUNT = 10;
-// Provisional until the log delivery delays in #1 are measured.
 const POLL_INTERVAL_MS = 2000;
 const POLL_TIMEOUT_MS = 60000;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// An image needs no CORS, so the frontends tell the providers apart by the width of provider.svg.
 const PROVIDER_BY_WIDTH = { 1: "route53", 2: "cloudDns" };
 
 function probeToken(token, deadline) {
