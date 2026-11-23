@@ -1,4 +1,4 @@
-resource "aws_acm_certificate" "main" {
+resource "aws_acm_certificate" "tsujiura" {
   domain_name               = local.domain_name
   subject_alternative_names = ["*.${local.domain_name}"]
   validation_method         = "DNS"
@@ -8,6 +8,6 @@ resource "aws_acm_certificate" "main" {
   }
 }
 
-resource "aws_acm_certificate_validation" "main" {
-  certificate_arn = aws_acm_certificate.main.arn
+resource "aws_acm_certificate_validation" "tsujiura" {
+  certificate_arn = aws_acm_certificate.tsujiura.arn
 }

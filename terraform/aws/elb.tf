@@ -1,17 +1,17 @@
-resource "aws_lb" "main" {
+resource "aws_lb" "tsujiura" {
   name                       = "tsujiura"
   load_balancer_type         = "application"
-  security_groups            = [aws_security_group.alb.id]
-  subnets                    = [for subnet in aws_subnet.public : subnet.id]
+  security_groups            = [aws_security_group.tsujiura_alb.id]
+  subnets                    = [for subnet in aws_subnet.tsujiura_public : subnet.id]
   drop_invalid_header_fields = true
 }
 
-resource "aws_lb_listener" "https" {
-  load_balancer_arn = aws_lb.main.arn
+resource "aws_lb_listener" "tsujiura_https" {
+  load_balancer_arn = aws_lb.tsujiura.arn
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn   = aws_acm_certificate_validation.main.certificate_arn
+  certificate_arn   = aws_acm_certificate_validation.tsujiura.certificate_arn
 
   default_action {
     type = "fixed-response"

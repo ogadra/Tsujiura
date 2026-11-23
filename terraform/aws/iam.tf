@@ -1,7 +1,7 @@
-data "aws_iam_policy_document" "budget_topic" {
+data "aws_iam_policy_document" "tsujiura_budget_topic" {
   statement {
     actions   = ["sns:Publish"]
-    resources = [aws_sns_topic.budget.arn]
+    resources = [aws_sns_topic.tsujiura_budget.arn]
 
     principals {
       type        = "Service"

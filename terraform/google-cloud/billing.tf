@@ -3,7 +3,7 @@ resource "google_project_service" "billingbudgets" {
   disable_on_destroy = true
 }
 
-resource "google_billing_budget" "main" {
+resource "google_billing_budget" "tsujiura" {
   provider = google.billing
 
   billing_account = data.google_project.current.billing_account
