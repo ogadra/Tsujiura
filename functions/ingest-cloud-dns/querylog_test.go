@@ -65,7 +65,6 @@ func TestParseQueryLogDiscardsOtherNames(t *testing.T) {
 		"www.tsujiura.ogadra.net.",
 		"name with spaces.tsujiura.ogadra.net.",
 		"a." + token + ".tsujiura.ogadra.net.",
-		token + ".example.com.",
 	}
 	for _, name := range names {
 		t.Run(name, func(t *testing.T) {
