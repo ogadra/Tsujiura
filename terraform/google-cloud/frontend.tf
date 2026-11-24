@@ -24,17 +24,20 @@ resource "google_storage_bucket_iam_member" "frontend_public" {
   member = "allUsers"
 }
 
-resource "google_storage_bucket_object" "frontend" {
-  for_each = {
-    "index.html"   = { source = "index.html", content_type = "text/html; charset=utf-8" }
-    "provider.svg" = { source = "provider/google-cloud.svg", content_type = "image/svg+xml" }
-  }
-
+resource "google_storage_bucket_object" "index_html" {
   bucket         = google_storage_bucket.frontend.name
-  name           = each.key
-  content_type   = each.value.content_type
-  source         = "${path.module}/../../web/${each.value.source}"
-  source_md5hash = filemd5("${path.module}/../../web/${each.value.source}")
+  name           = "index.html"
+  content_type   = "text/html; charset=utf-8"
+  source         = "${path.module}/../../web/index.html"
+  source_md5hash = filemd5("${path.module}/../../web/index.html")
+}
+
+resource "google_storage_bucket_object" "provider_svg" {
+  bucket         = google_storage_bucket.frontend.name
+  name           = "provider.svg"
+  content_type   = "image/svg+xml"
+  source         = "${path.module}/../../web/provider/google-cloud.svg"
+  source_md5hash = filemd5("${path.module}/../../web/provider/google-cloud.svg")
 }
 
 resource "google_compute_backend_bucket" "frontend" {
