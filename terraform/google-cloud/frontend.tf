@@ -1,8 +1,11 @@
-resource "google_project_service" "frontend" {
-  for_each = toset(["compute.googleapis.com", "storage.googleapis.com"])
+resource "google_project_service" "compute" {
+  service            = "compute.googleapis.com"
+  disable_on_destroy = true
+}
 
-  service            = each.value
-  disable_on_destroy = false
+resource "google_project_service" "storage" {
+  service            = "storage.googleapis.com"
+  disable_on_destroy = true
 }
 
 resource "google_storage_bucket" "frontend" {
@@ -15,7 +18,7 @@ resource "google_storage_bucket" "frontend" {
     main_page_suffix = "index.html"
   }
 
-  depends_on = [google_project_service.frontend]
+  depends_on = [google_project_service.storage]
 }
 
 resource "google_storage_bucket_iam_member" "frontend_public" {
@@ -49,7 +52,7 @@ resource "google_compute_backend_bucket" "frontend" {
     cache_mode = "CACHE_ALL_STATIC"
   }
 
-  depends_on = [google_project_service.frontend]
+  depends_on = [google_project_service.compute]
 }
 
 resource "google_compute_url_map" "frontend" {
@@ -60,5 +63,5 @@ resource "google_compute_url_map" "frontend" {
 resource "google_compute_global_address" "frontend" {
   name = "tsujiura-frontend"
 
-  depends_on = [google_project_service.frontend]
+  depends_on = [google_project_service.compute]
 }
