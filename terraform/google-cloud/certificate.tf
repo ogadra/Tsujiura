@@ -26,14 +26,16 @@ resource "google_certificate_manager_certificate_map" "frontend" {
 }
 
 resource "google_certificate_manager_certificate_map_entry" "frontend" {
-  for_each = {
-    "tsujiura-frontend"          = local.domain_name
-    "tsujiura-frontend-wildcard" = "*.${local.domain_name}"
-  }
-
-  name         = each.key
+  name         = "tsujiura-frontend"
   map          = google_certificate_manager_certificate_map.frontend.name
-  hostname     = each.value
+  hostname     = local.domain_name
+  certificates = [google_certificate_manager_certificate.frontend.id]
+}
+
+resource "google_certificate_manager_certificate_map_entry" "frontend_wildcard" {
+  name         = "tsujiura-frontend-wildcard"
+  map          = google_certificate_manager_certificate_map.frontend.name
+  hostname     = "*.${local.domain_name}"
   certificates = [google_certificate_manager_certificate.frontend.id]
 }
 
