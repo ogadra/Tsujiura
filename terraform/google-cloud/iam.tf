@@ -62,3 +62,9 @@ resource "google_project_iam_member" "result_api_firestore" {
   role    = google_project_iam_custom_role.result_api.id
   member  = google_service_account.result_api.member
 }
+
+resource "google_storage_bucket_iam_member" "frontend_public" {
+  bucket = google_storage_bucket.frontend.name
+  role   = "roles/storage.legacyObjectReader"
+  member = "allUsers"
+}
