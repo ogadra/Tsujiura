@@ -1,13 +1,13 @@
-resource "google_project_service" "certificate_manager" {
+resource "google_project_service" "certificatemanager" {
   service            = "certificatemanager.googleapis.com"
-  disable_on_destroy = false
+  disable_on_destroy = true
 }
 
 resource "google_certificate_manager_dns_authorization" "frontend" {
   name   = "tsujiura-frontend"
   domain = local.domain_name
 
-  depends_on = [google_project_service.certificate_manager]
+  depends_on = [google_project_service.certificatemanager]
 }
 
 resource "google_certificate_manager_certificate" "frontend" {
@@ -22,7 +22,7 @@ resource "google_certificate_manager_certificate" "frontend" {
 resource "google_certificate_manager_certificate_map" "frontend" {
   name = "tsujiura-frontend"
 
-  depends_on = [google_project_service.certificate_manager]
+  depends_on = [google_project_service.certificatemanager]
 }
 
 resource "google_certificate_manager_certificate_map_entry" "frontend" {
