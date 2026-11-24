@@ -16,3 +16,11 @@ data "aws_lambda_function" "ingest_route53" {
 
   function_name = "tsujiura-ingest-route53"
 }
+
+data "aws_lambda_function" "frontend" {
+  function_name = "tsujiura-frontend"
+}
+
+data "aws_lambda_function" "result_api" {
+  function_name = "tsujiura-result-api"
+}
