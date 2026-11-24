@@ -49,18 +49,3 @@ resource "google_compute_global_forwarding_rule" "frontend" {
   ip_address = google_compute_global_address.frontend.address
   port_range = "443"
 }
-
-output "certificate_validation_cname_name" {
-  description = "Name of the Google-managed certificate validation CNAME"
-  value       = one(google_certificate_manager_dns_authorization.frontend.dns_resource_record).name
-}
-
-output "certificate_validation_cname_value" {
-  description = "Value of the Google-managed certificate validation CNAME"
-  value       = one(google_certificate_manager_dns_authorization.frontend.dns_resource_record).data
-}
-
-output "frontend_lb_ip" {
-  description = "Static IP of the load balancer to pass to the frontend A records"
-  value       = google_compute_global_address.frontend.address
-}
