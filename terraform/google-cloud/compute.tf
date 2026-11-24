@@ -1,0 +1,27 @@
+resource "google_project_service" "compute" {
+  service            = "compute.googleapis.com"
+  disable_on_destroy = true
+}
+
+resource "google_compute_backend_bucket" "frontend" {
+  name        = "tsujiura-frontend"
+  bucket_name = google_storage_bucket.frontend.name
+  enable_cdn  = true
+
+  cdn_policy {
+    cache_mode = "CACHE_ALL_STATIC"
+  }
+
+  depends_on = [google_project_service.compute]
+}
+
+resource "google_compute_url_map" "frontend" {
+  name            = "tsujiura-frontend"
+  default_service = google_compute_backend_bucket.frontend.id
+}
+
+resource "google_compute_global_address" "frontend" {
+  name = "tsujiura-frontend"
+
+  depends_on = [google_project_service.compute]
+}
