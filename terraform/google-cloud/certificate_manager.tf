@@ -38,16 +38,3 @@ resource "google_certificate_manager_certificate_map_entry" "frontend_wildcard" 
   hostname     = "*.${local.domain_name}"
   certificates = [google_certificate_manager_certificate.frontend.id]
 }
-
-resource "google_compute_target_https_proxy" "frontend" {
-  name            = "tsujiura-frontend"
-  url_map         = google_compute_url_map.frontend.id
-  certificate_map = "//certificatemanager.googleapis.com/${google_certificate_manager_certificate_map.frontend.id}"
-}
-
-resource "google_compute_global_forwarding_rule" "frontend" {
-  name       = "tsujiura-frontend"
-  target     = google_compute_target_https_proxy.frontend.id
-  ip_address = google_compute_global_address.frontend.address
-  port_range = "443"
-}
