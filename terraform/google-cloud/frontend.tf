@@ -18,7 +18,6 @@ resource "google_storage_bucket" "frontend" {
   depends_on = [google_project_service.frontend]
 }
 
-# roles/storage.objectViewer also lets anyone list the bucket.
 resource "google_storage_bucket_iam_member" "frontend_public" {
   bucket = google_storage_bucket.frontend.name
   role   = "roles/storage.legacyObjectReader"
@@ -27,9 +26,8 @@ resource "google_storage_bucket_iam_member" "frontend_public" {
 
 resource "google_storage_bucket_object" "frontend" {
   for_each = {
-    "index.html" = { source = "index.html", content_type = "text/html; charset=utf-8" }
-    "main.js"    = { source = "main.js", content_type = "text/javascript; charset=utf-8" }
-    # Width 2 tells the page that Cloud DNS answered.
+    "index.html"   = { source = "index.html", content_type = "text/html; charset=utf-8" }
+    "main.js"      = { source = "main.js", content_type = "text/javascript; charset=utf-8" }
     "provider.svg" = { source = "provider/google-cloud.svg", content_type = "image/svg+xml" }
   }
 
