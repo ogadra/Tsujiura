@@ -17,3 +17,8 @@ output "frontend_repository_url" {
   description = "Read by the _deploy-aws recipe in justfile."
   value       = aws_ecr_repository.frontend.repository_url
 }
+
+output "google_cloud_result_api_role_arn" {
+  description = "Read by the _deploy-google-cloud recipe in justfile."
+  value       = aws_iam_role.google_cloud_result_api.arn
+}
