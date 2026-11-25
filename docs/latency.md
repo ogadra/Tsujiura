@@ -14,7 +14,7 @@
 
 ## 手順
 
-`terraform apply` と `just deploy-ingest-route53` のあとに、`nix develop` の中で実行する。AWSの認証情報には、Route53のゾーンの読み取りと、結果のテーブルの `dynamodb:GetItem` の権限が要る。
+`terraform apply` と `just deploy aws` のあとに、`nix develop` の中で実行する。AWSの認証情報には、Route53のゾーンの読み取りと、結果のテーブルの `dynamodb:GetItem` の権限が要る。
 
 ```sh
 export RESULTS_TABLE_NAME=<テーブル名>
