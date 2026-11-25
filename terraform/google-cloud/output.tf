@@ -32,7 +32,3 @@ output "result_api_workload_identity_audience" {
   description = "Read by the _deploy-aws recipe in justfile."
   value       = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.result_api_aws.name}"
 }
-
-output "result_api_service_account_unique_id" {
-  value = google_service_account.result_api.unique_id
-}
