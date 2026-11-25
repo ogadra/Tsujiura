@@ -1,3 +1,5 @@
+# checkov:skip=CKV_DOCKER_2:Lambda does not run the Docker HEALTHCHECK
+# checkov:skip=CKV_DOCKER_3:Lambda runs the image as its own non-root user
 # Build with the repository root as the context.
 FROM golang:1.27.4@sha256:205c7636d74e0ffbe3d007162df7d74f859f5a8c8322dfb9f907977686c126cf AS build
 WORKDIR /src

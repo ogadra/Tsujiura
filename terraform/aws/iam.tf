@@ -64,15 +64,19 @@ data "aws_iam_policy_document" "ingest_route53" {
 resource "aws_iam_role" "ingest_route53" {
   name               = "tsujiura-ingest-route53"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+
+  tags = local.common_tags
 }
 
 resource "aws_iam_role_policy" "ingest_route53" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   name   = "ingest-route53"
   role   = aws_iam_role.ingest_route53.id
   policy = data.aws_iam_policy_document.ingest_route53.json
 }
 
 resource "aws_iam_role_policy_attachment" "ingest_route53_logs" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   role       = aws_iam_role.ingest_route53.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
@@ -80,6 +84,8 @@ resource "aws_iam_role_policy_attachment" "ingest_route53_logs" {
 resource "aws_iam_role" "result_api" {
   name               = "tsujiura-result-api"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+
+  tags = local.common_tags
 }
 
 data "aws_iam_policy_document" "result_api" {
@@ -90,12 +96,14 @@ data "aws_iam_policy_document" "result_api" {
 }
 
 resource "aws_iam_role_policy" "result_api" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   name   = "read-results"
   role   = aws_iam_role.result_api.id
   policy = data.aws_iam_policy_document.result_api.json
 }
 
 resource "aws_iam_role_policy_attachment" "result_api_logs" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   role       = aws_iam_role.result_api.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
@@ -103,9 +111,55 @@ resource "aws_iam_role_policy_attachment" "result_api_logs" {
 resource "aws_iam_role" "frontend" {
   name               = "tsujiura-frontend"
   assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+
+  tags = local.common_tags
 }
 
 resource "aws_iam_role_policy_attachment" "frontend_logs" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   role       = aws_iam_role.frontend.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "aws_iam_policy_document" "google_cloud_result_api_assume" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = ["accounts.google.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "accounts.google.com:sub"
+      values   = [data.google_service_account.result_api.unique_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "accounts.google.com:aud"
+      values   = [data.google_service_account.result_api.unique_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "accounts.google.com:oaud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "google_cloud_result_api" {
+  name               = "tsujiura-google-cloud-result-api"
+  assume_role_policy = data.aws_iam_policy_document.google_cloud_result_api_assume.json
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy" "google_cloud_result_api" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
+  name   = "read-results"
+  role   = aws_iam_role.google_cloud_result_api.id
+  policy = data.aws_iam_policy_document.result_api.json
 }

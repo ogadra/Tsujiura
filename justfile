@@ -45,6 +45,9 @@ _deploy-google-cloud:
     topic="$(terraform -chdir=terraform/google-cloud output -raw dns_query_logs_topic)"
     asn_bucket="$(terraform -chdir=terraform/google-cloud output -raw asn_bucket)"
     result_api_service_account="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
+    results_table_name="$(terraform -chdir=terraform/aws output -raw results_table_name)"
+    results_table_region="$(terraform -chdir=terraform/aws output -raw results_table_region)"
+    role_arn="$(terraform -chdir=terraform/aws output -raw google_cloud_result_api_role_arn)"
     ingest_source_dir="$(mktemp -d)"
     result_api_source_dir="$(mktemp -d)"
     trap 'rm -rf "$ingest_source_dir" "$result_api_source_dir"' EXIT
@@ -72,4 +75,4 @@ _deploy-google-cloud:
       --service-account="$result_api_service_account" \
       --allow-unauthenticated \
       --ingress-settings=internal-and-gclb \
-      --set-env-vars=FIRESTORE_COLLECTION=results
+      --set-env-vars="FIRESTORE_COLLECTION=results,RESULTS_TABLE_NAME=$results_table_name,RESULTS_TABLE_REGION=$results_table_region,RESULTS_TABLE_ROLE_ARN=$role_arn"

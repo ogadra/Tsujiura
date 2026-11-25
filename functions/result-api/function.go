@@ -9,16 +9,27 @@ import (
 	"os"
 	"sync"
 
+	"cloud.google.com/go/compute/metadata"
 	"cloud.google.com/go/firestore"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 
 	"github.com/ogadra/Tsujiura/internal/result"
 )
 
-type unreadableDynamoDB struct{}
+const tokenAudience = "sts.amazonaws.com"
 
-func (unreadableDynamoDB) Get(context.Context, string) (*result.Record, error) {
-	return nil, errors.New("dynamodb is not readable from Google Cloud yet")
+type googleIDToken struct{}
+
+func (googleIDToken) GetIdentityToken() ([]byte, error) {
+	token, err := metadata.GetWithContext(context.Background(), "instance/service-accounts/default/identity?audience="+tokenAudience)
+	if err != nil {
+		return nil, fmt.Errorf("fetch google id token: %w", err)
+	}
+	return []byte(token), nil
 }
 
 type api struct {
@@ -39,10 +50,27 @@ func init() {
 	})
 }
 
+func newDynamoDB(roleARN, region string) *dynamodb.Client {
+	provider := stscreds.NewWebIdentityRoleProvider(sts.New(sts.Options{Region: region}), roleARN, googleIDToken{})
+	return dynamodb.New(dynamodb.Options{Region: region, Credentials: aws.NewCredentialsCache(provider)})
+}
+
 func newAPI() (*api, error) {
 	collection := os.Getenv("FIRESTORE_COLLECTION")
 	if collection == "" {
 		return nil, errors.New("FIRESTORE_COLLECTION is not set")
+	}
+	table := os.Getenv("RESULTS_TABLE_NAME")
+	if table == "" {
+		return nil, errors.New("RESULTS_TABLE_NAME is not set")
+	}
+	region := os.Getenv("RESULTS_TABLE_REGION")
+	if region == "" {
+		return nil, errors.New("RESULTS_TABLE_REGION is not set")
+	}
+	roleARN := os.Getenv("RESULTS_TABLE_ROLE_ARN")
+	if roleARN == "" {
+		return nil, errors.New("RESULTS_TABLE_ROLE_ARN is not set")
 	}
 	client, err := firestore.NewClient(context.Background(), firestore.DetectProjectID)
 	if err != nil {
@@ -50,7 +78,7 @@ func newAPI() (*api, error) {
 	}
 
 	return &api{respond: result.Aggregator{
-		DynamoDB:  unreadableDynamoDB{},
+		DynamoDB:  result.DynamoDB{GetItem: newDynamoDB(roleARN, region).GetItem, Table: table},
 		Firestore: result.Firestore{Results: client.Collection(collection)},
 	}.Respond}, nil
 }

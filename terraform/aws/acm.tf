@@ -6,8 +6,11 @@ resource "aws_acm_certificate" "tsujiura" {
   lifecycle {
     create_before_destroy = true
   }
+
+  tags = local.common_tags
 }
 
 resource "aws_acm_certificate_validation" "tsujiura" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   certificate_arn = aws_acm_certificate.tsujiura.arn
 }
