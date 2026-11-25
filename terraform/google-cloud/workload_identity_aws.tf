@@ -1,14 +1,22 @@
-resource "google_project_service" "workload_identity" {
-  for_each = toset(["iam.googleapis.com", "iamcredentials.googleapis.com", "sts.googleapis.com"])
+resource "google_project_service" "iam" {
+  service            = "iam.googleapis.com"
+  disable_on_destroy = true
+}
 
-  service            = each.value
-  disable_on_destroy = false
+resource "google_project_service" "iamcredentials" {
+  service            = "iamcredentials.googleapis.com"
+  disable_on_destroy = true
+}
+
+resource "google_project_service" "sts" {
+  service            = "sts.googleapis.com"
+  disable_on_destroy = true
 }
 
 resource "google_iam_workload_identity_pool" "aws" {
   workload_identity_pool_id = "tsujiura-aws"
 
-  depends_on = [google_project_service.workload_identity]
+  depends_on = [google_project_service.iam, google_project_service.iamcredentials, google_project_service.sts]
 }
 
 resource "google_iam_workload_identity_pool_provider" "aws" {
