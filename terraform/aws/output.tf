@@ -22,3 +22,13 @@ output "google_cloud_result_api_role_arn" {
   description = "Read by the _deploy-google-cloud recipe in justfile."
   value       = aws_iam_role.google_cloud_result_api.arn
 }
+
+output "results_table_name" {
+  description = "Read by the _deploy-google-cloud recipe in justfile."
+  value       = aws_dynamodb_table.results.name
+}
+
+output "results_table_region" {
+  description = "Read by the _deploy-google-cloud recipe in justfile."
+  value       = data.aws_region.current.region
+}
