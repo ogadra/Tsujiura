@@ -17,8 +17,3 @@ output "frontend_repository_url" {
   description = "Read by the _deploy-aws recipe in justfile."
   value       = aws_ecr_repository.frontend.repository_url
 }
-
-# terraform/google-cloud takes this as result_api_assumed_role_arn.
-output "result_api_assumed_role_arn" {
-  value = "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/${aws_iam_role.result_api.name}"
-}
