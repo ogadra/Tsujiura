@@ -7,7 +7,7 @@ resource "google_compute_region_network_endpoint_group" "result_api" {
     function = "tsujiura-result-api"
   }
 
-  depends_on = [google_project_service.frontend]
+  depends_on = [google_project_service.compute]
 }
 
 resource "google_compute_backend_service" "result_api" {
