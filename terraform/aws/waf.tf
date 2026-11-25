@@ -1,4 +1,4 @@
-resource "aws_wafv2_web_acl" "alb" {
+resource "aws_wafv2_web_acl" "tsujiura_alb" {
   # checkov:skip=CKV_AWS_192:The backends are Go Lambdas, which Log4j does not affect
   # checkov:skip=CKV2_AWS_31:WAF logs are not needed while the managed rules only count
   name  = "tsujiura-alb"
@@ -40,8 +40,8 @@ resource "aws_wafv2_web_acl" "alb" {
   tags = local.common_tags
 }
 
-resource "aws_wafv2_web_acl_association" "alb" {
+resource "aws_wafv2_web_acl_association" "tsujiura_alb" {
   # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
-  resource_arn = aws_lb.main.arn
-  web_acl_arn  = aws_wafv2_web_acl.alb.arn
+  resource_arn = aws_lb.tsujiura.arn
+  web_acl_arn  = aws_wafv2_web_acl.tsujiura_alb.arn
 }

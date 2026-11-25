@@ -1,3 +1,8 @@
+variable "google_cloud_result_api_service_account_id" {
+  description = "Unique ID of the Google Cloud result API service account (result_api_service_account_unique_id output of terraform/google-cloud)"
+  type        = string
+}
+
 # AWS maps azp of a Google ID token, the service account's unique ID, to aud and its audience to oaud.
 data "aws_iam_policy_document" "google_cloud_result_api_assume" {
   statement {

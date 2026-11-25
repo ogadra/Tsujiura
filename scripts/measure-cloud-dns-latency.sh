@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# The document's createTime stands in for the receipt, so the polling interval does not affect the delay.
 set -euo pipefail
 
 usage="usage: $0 <cloud-dns-nameserver> [count]"

@@ -11,7 +11,7 @@ const tokenPattern = `[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
 
 var (
 	tokenOnly = regexp.MustCompile(`^` + tokenPattern + `$`)
-	tokenName = regexp.MustCompile(`^(` + tokenPattern + `)\.tsujiura\.ogadra\.net$`)
+	tokenName = regexp.MustCompile(`^(` + tokenPattern + `)\.`)
 )
 
 type Query struct {
