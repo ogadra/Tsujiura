@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"cloud.google.com/go/storage"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/cloudevents/sdk-go/v2/event"
 
@@ -50,16 +51,21 @@ func newIngester() (*ingester, error) {
 	if collection == "" {
 		return nil, errors.New("FIRESTORE_COLLECTION is not set")
 	}
-	asnDBPath := os.Getenv("ASN_DB_PATH")
-	if asnDBPath == "" {
-		return nil, errors.New("ASN_DB_PATH is not set")
+	bucket := os.Getenv("ASN_BUCKET")
+	if bucket == "" {
+		return nil, errors.New("ASN_BUCKET is not set")
 	}
 
-	asnDB, err := asn.Open(asnDBPath)
+	ctx := context.Background()
+	storageClient, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("create storage client: %w", err)
+	}
+	asnDB, err := openASNDB(ctx, gcsObjectReader(storageClient), bucket)
 	if err != nil {
 		return nil, err
 	}
-	client, err := firestore.NewClient(context.Background(), firestore.DetectProjectID)
+	client, err := firestore.NewClient(ctx, firestore.DetectProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("create firestore client: %w", err)
 	}

@@ -16,7 +16,6 @@ printf 'sample\ttoken\tqueried_at\tdelay_ms\n'
 for ((sample = 1; sample <= count; sample++)); do
   token="$(cat /proc/sys/kernel/random/uuid)"
   started_at="$(date +%s%3N)"
-  # Asking the name server directly keeps the query away from Cloud DNS.
   dig +short "@$nameserver" "$token.$domain" A >/dev/null
 
   while true; do

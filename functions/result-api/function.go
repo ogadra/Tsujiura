@@ -15,7 +15,6 @@ import (
 	"github.com/ogadra/Tsujiura/internal/result"
 )
 
-// unreadableDynamoDB stands in until the function can authenticate to AWS.
 type unreadableDynamoDB struct{}
 
 func (unreadableDynamoDB) Get(context.Context, string) (*result.Record, error) {
