@@ -5,7 +5,7 @@ resource "google_project_service" "storage" {
 
 resource "google_storage_bucket" "asn" {
   name     = format("tsujiura-asn-%s", data.google_project.current.project_id)
-  location = "asia-northeast1"
+  location = data.google_client_config.current.region
 
   uniform_bucket_level_access = true
   public_access_prevention    = "enforced"
@@ -13,7 +13,7 @@ resource "google_storage_bucket" "asn" {
 
 resource "google_storage_bucket" "frontend" {
   name                        = format("tsujiura-frontend-%s", data.google_project.current.project_id)
-  location                    = "asia-northeast1"
+  location                    = data.google_client_config.current.region
   uniform_bucket_level_access = true
   public_access_prevention    = "inherited"
 

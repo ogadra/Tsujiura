@@ -5,7 +5,7 @@ resource "google_project_service" "firestore" {
 
 resource "google_firestore_database" "tsujiura" {
   name        = "(default)"
-  location_id = "asia-northeast1"
+  location_id = data.google_client_config.current.region
   type        = "FIRESTORE_NATIVE"
 
   depends_on = [google_project_service.firestore]

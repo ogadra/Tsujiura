@@ -56,7 +56,7 @@ resource "google_compute_global_forwarding_rule" "frontend" {
 
 resource "google_compute_region_network_endpoint_group" "result_api" {
   name                  = "tsujiura-result-api"
-  region                = "asia-northeast1"
+  region                = data.google_client_config.current.region
   network_endpoint_type = "SERVERLESS"
 
   cloud_function {
