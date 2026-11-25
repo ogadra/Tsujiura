@@ -27,6 +27,9 @@ _deploy-aws:
     aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${result_api_repository%%/*}"
     docker build --platform linux/amd64 --provenance=false -f lambda/result-api/Dockerfile -t "$result_api_repository:$IMAGE_TAG" .
     docker push "$result_api_repository:$IMAGE_TAG"
+    export GOOGLE_CLOUD_PROJECT="$(terraform -chdir=terraform/google-cloud output -raw project_id)"
+    export GOOGLE_WORKLOAD_IDENTITY_AUDIENCE="$(terraform -chdir=terraform/google-cloud output -raw result_api_workload_identity_audience)"
+    export GOOGLE_SERVICE_ACCOUNT="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
     lambroll deploy --function lambda/result-api/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
     aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${frontend_repository%%/*}"
     docker build --platform linux/amd64 --provenance=false -f lambda/frontend/Dockerfile -t "$frontend_repository:$IMAGE_TAG" .

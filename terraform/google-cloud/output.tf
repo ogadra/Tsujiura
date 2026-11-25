@@ -19,6 +19,16 @@ output "dns_query_logs_topic" {
 }
 
 output "result_api_service_account" {
-  description = "Read by the _deploy-google-cloud recipe in justfile."
+  description = "Read by the _deploy-google-cloud and _deploy-aws recipes in justfile."
   value       = google_service_account.result_api.email
+}
+
+output "project_id" {
+  description = "Read by the _deploy-aws recipe in justfile."
+  value       = data.google_project.current.project_id
+}
+
+output "result_api_workload_identity_audience" {
+  description = "Read by the _deploy-aws recipe in justfile."
+  value       = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.result_api_aws.name}"
 }
