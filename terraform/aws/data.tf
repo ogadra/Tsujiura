@@ -24,3 +24,7 @@ data "aws_lambda_function" "frontend" {
 data "aws_lambda_function" "result_api" {
   function_name = "tsujiura-result-api"
 }
+
+data "google_service_account" "result_api" {
+  account_id = "tsujiura-result-api"
+}

@@ -109,3 +109,43 @@ resource "aws_iam_role_policy_attachment" "frontend_logs" {
   role       = aws_iam_role.frontend.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+data "aws_iam_policy_document" "google_cloud_result_api_assume" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = ["accounts.google.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "accounts.google.com:sub"
+      values   = [data.google_service_account.result_api.unique_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "accounts.google.com:aud"
+      values   = [data.google_service_account.result_api.unique_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "accounts.google.com:oaud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "google_cloud_result_api" {
+  name               = "tsujiura-google-cloud-result-api"
+  assume_role_policy = data.aws_iam_policy_document.google_cloud_result_api_assume.json
+}
+
+resource "aws_iam_role_policy" "google_cloud_result_api" {
+  name   = "read-results"
+  role   = aws_iam_role.google_cloud_result_api.id
+  policy = data.aws_iam_policy_document.result_api.json
+}
