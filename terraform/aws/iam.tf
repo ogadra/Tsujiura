@@ -121,7 +121,6 @@ resource "aws_iam_role_policy_attachment" "frontend_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# AWS maps azp of a Google ID token, the service account's unique ID, to aud and its audience to oaud.
 data "aws_iam_policy_document" "google_cloud_result_api_assume" {
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]

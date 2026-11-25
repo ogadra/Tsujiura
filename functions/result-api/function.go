@@ -20,7 +20,6 @@ import (
 	"github.com/ogadra/Tsujiura/internal/result"
 )
 
-// tokenAudience must match the oaud condition of the role's trust policy.
 const tokenAudience = "sts.amazonaws.com"
 
 type googleIDToken struct{}
