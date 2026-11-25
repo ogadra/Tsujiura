@@ -1,3 +1,8 @@
+variable "result_api_assumed_role_arn" {
+  description = "STS assumed role ARN of the AWS result API, from the result_api_assumed_role_arn output of terraform/aws"
+  type        = string
+}
+
 resource "google_project_service" "workload_identity" {
   for_each = toset(["iam.googleapis.com", "iamcredentials.googleapis.com", "sts.googleapis.com"])
 

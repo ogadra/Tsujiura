@@ -16,16 +16,13 @@ type DB struct {
 	reader *maxminddb.Reader
 }
 
-func Open(path string) (*DB, error) {
-	reader, err := maxminddb.Open(path)
+// The ingest functions read the database from object storage, so it is opened from bytes instead of a file.
+func New(data []byte) (*DB, error) {
+	reader, err := maxminddb.OpenBytes(data)
 	if err != nil {
 		return nil, fmt.Errorf("open ASN database: %w", err)
 	}
 	return &DB{reader: reader}, nil
-}
-
-func (db *DB) Close() error {
-	return db.reader.Close()
 }
 
 // Lookup reports false when the database has no network for ip.
