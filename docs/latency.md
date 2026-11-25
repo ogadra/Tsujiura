@@ -50,9 +50,8 @@ Cloud DNSのクエリログがCloud Run functionsに届くまでの遅延を測�
 `scripts/measure-cloud-dns-latency.sh` は、トークンの名前をCloud DNSのネームサーバーへ直接問い合わせ、取り込み関数が書いたFirestoreのドキュメントの `createTime` と送信時刻の差を出す。
 
 1. Terraformのapplyと `just deploy google-cloud` を済ませる
-2. `gcloud auth login` で、Firestoreを読める権限のあるアカウントにログインする
-3. `timedatectl` で手元の時計が同期していることを確かめる
-4. `GOOGLE_CLOUD_PROJECT` を設定し、Cloud DNSのネームサーバーを1本指定して実行する
+2. `timedatectl` で手元の時計が同期していることを確かめる
+3. `GOOGLE_CLOUD_PROJECT` を設定し、Cloud DNSのネームサーバーを1本指定して実行する
 
 ```sh
 scripts/measure-cloud-dns-latency.sh ns-cloud-x1.googledomains.com 10
