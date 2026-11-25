@@ -1,4 +1,5 @@
 resource "aws_ce_cost_allocation_tag" "tsujiura_project" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   tag_key = "Project"
   status  = "Active"
 }
@@ -26,6 +27,8 @@ resource "aws_budgets_budget" "tsujiura" {
       subscriber_sns_topic_arns = [aws_sns_topic.tsujiura_budget.arn]
     }
   }
+
+  tags = local.common_tags
 
   depends_on = [aws_sns_topic_policy.tsujiura_budget]
 }

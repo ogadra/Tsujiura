@@ -18,8 +18,7 @@ provider "aws" {
 }
 
 provider "google" {
-  region         = "asia-northeast1"
-  default_labels = local.common_labels
+  region = "asia-northeast1"
 }
 
 provider "google" {

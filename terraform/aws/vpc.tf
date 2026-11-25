@@ -1,17 +1,26 @@
 resource "aws_vpc" "tsujiura" {
+  # checkov:skip=CKV2_AWS_11:The VPC only holds the ALB
   cidr_block = "10.0.0.0/16"
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura"
-  }
+  })
+}
+
+resource "aws_default_security_group" "tsujiura" {
+  vpc_id = aws_vpc.tsujiura.id
+
+  tags = merge(local.common_tags, {
+    Name = "tsujiura-default"
+  })
 }
 
 resource "aws_internet_gateway" "tsujiura" {
   vpc_id = aws_vpc.tsujiura.id
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura"
-  }
+  })
 }
 
 resource "aws_subnet" "tsujiura_public" {
@@ -21,9 +30,9 @@ resource "aws_subnet" "tsujiura_public" {
   availability_zone = each.key
   cidr_block        = each.value
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura-public-${each.key}"
-  }
+  })
 }
 
 resource "aws_route_table" "tsujiura_public" {
@@ -34,12 +43,13 @@ resource "aws_route_table" "tsujiura_public" {
     gateway_id = aws_internet_gateway.tsujiura.id
   }
 
-  tags = {
+  tags = merge(local.common_tags, {
     Name = "tsujiura-public"
-  }
+  })
 }
 
 resource "aws_route_table_association" "tsujiura_public" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   for_each = aws_subnet.tsujiura_public
 
   subnet_id      = each.value.id
@@ -50,6 +60,8 @@ resource "aws_security_group" "tsujiura_alb" {
   name        = "tsujiura-alb"
   description = "HTTPS from the internet to the ALB"
   vpc_id      = aws_vpc.tsujiura.id
+
+  tags = local.common_tags
 }
 
 resource "aws_vpc_security_group_ingress_rule" "tsujiura_alb_https" {
@@ -59,4 +71,6 @@ resource "aws_vpc_security_group_ingress_rule" "tsujiura_alb_https" {
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
+
+  tags = local.common_tags
 }

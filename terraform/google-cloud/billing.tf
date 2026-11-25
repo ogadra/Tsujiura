@@ -1,9 +1,11 @@
 resource "google_project_service" "billingbudgets" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   service            = "billingbudgets.googleapis.com"
   disable_on_destroy = true
 }
 
 resource "google_billing_budget" "tsujiura" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   provider = google.billing
 
   billing_account = data.google_project.current.billing_account

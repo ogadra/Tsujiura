@@ -1,9 +1,14 @@
 resource "aws_lb" "tsujiura" {
+  # checkov:skip=CKV_AWS_91:ALB access logs are not used
+  # checkov:skip=CKV_AWS_150:Deletion protection would block terraform destroy
+  # checkov:skip=CKV2_AWS_76:The backends are Go Lambdas, which Log4j does not affect
   name                       = "tsujiura"
   load_balancer_type         = "application"
   security_groups            = [aws_security_group.tsujiura_alb.id]
   subnets                    = [for subnet in aws_subnet.tsujiura_public : subnet.id]
   drop_invalid_header_fields = true
+
+  tags = local.common_tags
 }
 
 resource "aws_lb_listener" "tsujiura_https" {
@@ -22,6 +27,8 @@ resource "aws_lb_listener" "tsujiura_https" {
       status_code  = "404"
     }
   }
+
+  tags = local.common_tags
 }
 
 resource "aws_lb_target_group" "frontend" {
@@ -29,6 +36,8 @@ resource "aws_lb_target_group" "frontend" {
   target_type = "lambda"
 
   lambda_multi_value_headers_enabled = false
+
+  tags = local.common_tags
 }
 
 resource "aws_lb_listener_rule" "frontend" {
@@ -45,6 +54,8 @@ resource "aws_lb_listener_rule" "frontend" {
       values = ["/", "/provider.svg"]
     }
   }
+
+  tags = local.common_tags
 }
 
 resource "aws_lb_target_group" "result_api" {
@@ -52,6 +63,8 @@ resource "aws_lb_target_group" "result_api" {
   target_type = "lambda"
 
   lambda_multi_value_headers_enabled = false
+
+  tags = local.common_tags
 }
 
 resource "aws_lb_listener_rule" "result_api" {
@@ -68,9 +81,12 @@ resource "aws_lb_listener_rule" "result_api" {
       values = ["/api/result"]
     }
   }
+
+  tags = local.common_tags
 }
 
 resource "aws_lb_target_group_attachment" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   depends_on = [aws_lambda_permission.frontend]
 
   target_group_arn = aws_lb_target_group.frontend.arn
@@ -78,6 +94,7 @@ resource "aws_lb_target_group_attachment" "frontend" {
 }
 
 resource "aws_lb_target_group_attachment" "result_api" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   depends_on = [aws_lambda_permission.result_api]
 
   target_group_arn = aws_lb_target_group.result_api.arn

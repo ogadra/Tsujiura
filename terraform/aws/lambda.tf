@@ -1,4 +1,5 @@
 resource "aws_lambda_permission" "ingest_route53" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   provider = aws.use1
 
   action        = "lambda:InvokeFunction"
@@ -8,6 +9,7 @@ resource "aws_lambda_permission" "ingest_route53" {
 }
 
 resource "aws_lambda_permission" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   action        = "lambda:InvokeFunction"
   function_name = data.aws_lambda_function.frontend.function_name
   principal     = "elasticloadbalancing.amazonaws.com"
@@ -15,6 +17,7 @@ resource "aws_lambda_permission" "frontend" {
 }
 
 resource "aws_lambda_permission" "result_api" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   action        = "lambda:InvokeFunction"
   function_name = data.aws_lambda_function.result_api.function_name
   principal     = "elasticloadbalancing.amazonaws.com"
