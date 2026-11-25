@@ -36,6 +36,7 @@
           dig
           go
           google-cloud-sdk
+          jq
           just
           lambroll
           lefthook
