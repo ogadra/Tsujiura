@@ -67,5 +67,6 @@ _deploy-google-cloud:
       --entry-point=ResultAPI \
       --trigger-http \
       --service-account="$result_api_service_account" \
-      --no-allow-unauthenticated \
+      --allow-unauthenticated \
+      --ingress-settings=internal-and-gclb \
       --set-env-vars=FIRESTORE_COLLECTION=results
