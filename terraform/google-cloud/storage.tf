@@ -18,12 +18,11 @@ resource "google_storage_bucket" "asn" {
 
 resource "google_storage_bucket" "frontend" {
   # checkov:skip=CKV_GCP_62:Access logs are not used
-  # checkov:skip=CKV_GCP_114:The bucket is public to serve the measurement page
   # checkov:skip=CKV_GCP_78:Terraform uploads every object again from web/
   name                        = format("tsujiura-frontend-%s", data.google_project.current.project_id)
   location                    = data.google_client_config.current.region
   uniform_bucket_level_access = true
-  public_access_prevention    = "inherited"
+  public_access_prevention    = "enforced"
 
   website {
     main_page_suffix = "index.html"
