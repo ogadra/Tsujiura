@@ -74,13 +74,10 @@ resource "google_project_iam_member" "result_api_firestore" {
   member  = google_service_account.result_api.member
 }
 
-resource "google_storage_bucket_iam_member" "frontend_load_balancer" {
+resource "google_service_account" "frontend" {
   # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
-  bucket = google_storage_bucket.frontend.name
-  role   = "roles/storage.objectViewer"
-  member = "serviceAccount:service-${data.google_project.current.number}@https-lb.iam.gserviceaccount.com"
-
-  depends_on = [google_compute_backend_bucket.frontend]
+  account_id   = "tsujiura-frontend"
+  display_name = "Tsujiura frontend function"
 }
 
 resource "google_project_service" "iam" {
