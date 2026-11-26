@@ -76,6 +76,3 @@ _deploy-google-cloud:
       --no-allow-unauthenticated \
       --ingress-settings=internal-and-gclb \
       --set-env-vars="FIRESTORE_COLLECTION=results,RESULTS_TABLE_NAME=$results_table_name,RESULTS_TABLE_REGION=$results_table_region,RESULTS_TABLE_ROLE_ARN=$role_arn"
-    gcloud run services update tsujiura-result-api \
-      --region=asia-northeast1 \
-      --no-invoker-iam-check
