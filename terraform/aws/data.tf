@@ -28,3 +28,11 @@ data "aws_lambda_function" "result_api" {
 data "google_service_account" "result_api" {
   account_id = "tsujiura-result-api"
 }
+
+data "google_dns_managed_zone" "tsujiura" {
+  name = replace(local.domain_name, ".", "-")
+}
+
+data "google_compute_global_address" "frontend" {
+  name = "tsujiura-frontend"
+}
