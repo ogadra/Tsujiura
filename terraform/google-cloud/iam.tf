@@ -80,7 +80,6 @@ resource "google_storage_bucket_iam_member" "frontend_load_balancer" {
   role   = "roles/storage.objectViewer"
   member = "serviceAccount:service-${data.google_project.current.number}@https-lb.iam.gserviceaccount.com"
 
-  # The https-lb service agent exists only after the project has a backend bucket.
   depends_on = [google_compute_backend_bucket.frontend]
 }
 
