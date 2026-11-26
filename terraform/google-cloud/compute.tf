@@ -11,7 +11,8 @@ resource "google_compute_backend_bucket" "frontend" {
   enable_cdn  = true
 
   cdn_policy {
-    cache_mode = "CACHE_ALL_STATIC"
+    # Cloud Storage serves private objects with Cache-Control: private, which CACHE_ALL_STATIC does not cache.
+    cache_mode = "FORCE_CACHE_ALL"
   }
 
   depends_on = [google_project_service.compute]

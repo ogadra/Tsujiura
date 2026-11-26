@@ -74,12 +74,14 @@ resource "google_project_iam_member" "result_api_firestore" {
   member  = google_service_account.result_api.member
 }
 
-resource "google_storage_bucket_iam_member" "frontend_public" {
+resource "google_storage_bucket_iam_member" "frontend_load_balancer" {
   # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
-  # checkov:skip=CKV_GCP_28:The bucket is public to serve the measurement page
   bucket = google_storage_bucket.frontend.name
-  role   = "roles/storage.legacyObjectReader"
-  member = "allUsers"
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:service-${data.google_project.current.number}@https-lb.iam.gserviceaccount.com"
+
+  # The https-lb service agent exists only after the project has a backend bucket.
+  depends_on = [google_compute_backend_bucket.frontend]
 }
 
 resource "google_project_service" "iam" {
