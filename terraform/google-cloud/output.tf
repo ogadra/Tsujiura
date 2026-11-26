@@ -23,6 +23,11 @@ output "result_api_service_account" {
   value       = google_service_account.result_api.email
 }
 
+output "build_service_account" {
+  description = "Read by the _deploy-google-cloud recipe in justfile."
+  value       = google_service_account.build.id
+}
+
 output "frontend_service_account" {
   description = "Read by the _deploy-google-cloud recipe in justfile."
   value       = google_service_account.frontend.email
