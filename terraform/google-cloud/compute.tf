@@ -4,23 +4,10 @@ resource "google_project_service" "compute" {
   disable_on_destroy = true
 }
 
-resource "google_compute_backend_bucket" "frontend" {
-  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
-  name        = "tsujiura-frontend"
-  bucket_name = google_storage_bucket.frontend.name
-  enable_cdn  = true
-
-  cdn_policy {
-    cache_mode = "FORCE_CACHE_ALL"
-  }
-
-  depends_on = [google_project_service.compute]
-}
-
 resource "google_compute_url_map" "frontend" {
   # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   name            = "tsujiura-frontend"
-  default_service = google_compute_backend_bucket.frontend.id
+  default_service = google_compute_backend_service.frontend.id
 
   host_rule {
     hosts        = ["*"]
@@ -29,7 +16,7 @@ resource "google_compute_url_map" "frontend" {
 
   path_matcher {
     name            = "frontend"
-    default_service = google_compute_backend_bucket.frontend.id
+    default_service = google_compute_backend_service.frontend.id
 
     path_rule {
       paths   = ["/api/result"]
@@ -81,5 +68,27 @@ resource "google_compute_backend_service" "result_api" {
 
   backend {
     group = google_compute_region_network_endpoint_group.result_api.id
+  }
+}
+
+resource "google_compute_region_network_endpoint_group" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  name                  = "tsujiura-frontend"
+  region                = data.google_client_config.current.region
+  network_endpoint_type = "SERVERLESS"
+
+  cloud_function {
+    function = "tsujiura-frontend"
+  }
+
+  depends_on = [google_project_service.compute]
+}
+
+resource "google_compute_backend_service" "frontend" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  name = "tsujiura-frontend"
+
+  backend {
+    group = google_compute_region_network_endpoint_group.frontend.id
   }
 }
