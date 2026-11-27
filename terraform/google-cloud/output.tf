@@ -42,3 +42,12 @@ output "result_api_workload_identity_audience" {
   description = "Read by the _deploy-aws recipe in justfile."
   value       = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.result_api_aws.name}"
 }
+
+output "dns_authorization_record" {
+  description = "Read by terraform/dns-route53 and terraform/dns-cloud-dns through terraform_remote_state."
+  value = {
+    name = google_certificate_manager_dns_authorization.frontend.dns_resource_record[0].name
+    type = google_certificate_manager_dns_authorization.frontend.dns_resource_record[0].type
+    data = google_certificate_manager_dns_authorization.frontend.dns_resource_record[0].data
+  }
+}

@@ -32,3 +32,38 @@ output "results_table_region" {
   description = "Read by the _deploy-google-cloud recipe in justfile."
   value       = data.aws_region.current.region
 }
+
+output "route53_delegation_set_id" {
+  description = "Read by terraform/dns-route53 through terraform_remote_state."
+  value       = aws_route53_delegation_set.tsujiura.id
+}
+
+output "route53_name_servers" {
+  description = "Read by terraform/dns-route53 and terraform/dns-cloud-dns through terraform_remote_state."
+  value       = local.route53_name_servers
+}
+
+output "route53_health_check_ids" {
+  description = "Read by terraform/dns-route53 through terraform_remote_state."
+  value       = { for key, health_check in aws_route53_health_check.tsujiura_frontend : key => health_check.id }
+}
+
+output "cloud_dns_health_check_id" {
+  description = "Read by terraform/dns-cloud-dns through terraform_remote_state."
+  value       = google_compute_health_check.tsujiura_frontend.id
+}
+
+output "frontend_ips" {
+  description = "Read by terraform/dns-route53 and terraform/dns-cloud-dns through terraform_remote_state."
+  value       = local.frontend_ips
+}
+
+output "acm_validation_record" {
+  description = "Read by terraform/dns-route53 and terraform/dns-cloud-dns through terraform_remote_state."
+  value       = local.acm_validation_record
+}
+
+output "route53_query_log_group_arn" {
+  description = "Read by terraform/dns-route53 through terraform_remote_state."
+  value       = aws_cloudwatch_log_group.route53_query_log.arn
+}
