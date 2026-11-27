@@ -12,11 +12,13 @@ func TestHandler(t *testing.T) {
 		provider, path, contentType, body string
 		status                            int
 	}{
-		{"aws", "/", "text/html; charset=utf-8", "<title>Tsujiura</title>", http.StatusOK},
+		{"aws", "/", "text/html; charset=utf-8", `<p class="served-by aws">このページを返したクラウド <strong>AWS</strong></p>`, http.StatusOK},
 		{"aws", "/provider.svg", "image/svg+xml", `width="1"`, http.StatusOK},
+		{"aws", "/healthz", "text/plain; charset=utf-8", "", http.StatusOK},
 		{"aws", "/missing", "", "", http.StatusNotFound},
-		{"google-cloud", "/", "text/html; charset=utf-8", "<title>Tsujiura</title>", http.StatusOK},
+		{"google-cloud", "/", "text/html; charset=utf-8", `<p class="served-by google-cloud">このページを返したクラウド <strong>Google Cloud</strong></p>`, http.StatusOK},
 		{"google-cloud", "/provider.svg", "image/svg+xml", `width="2"`, http.StatusOK},
+		{"google-cloud", "/healthz", "text/plain; charset=utf-8", "", http.StatusOK},
 		{"google-cloud", "/missing", "", "", http.StatusNotFound},
 	}
 	for _, tt := range tests {

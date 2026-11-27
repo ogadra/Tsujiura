@@ -76,6 +76,15 @@ func (a Aggregator) Respond(ctx context.Context, token string) (int, []byte) {
 	return encode(http.StatusOK, found)
 }
 
+func (a Aggregator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	status, body := a.Respond(r.Context(), r.URL.Query().Get("token"))
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	if _, err := w.Write(body); err != nil {
+		slog.ErrorContext(r.Context(), "write response", "error", err)
+	}
+}
+
 func encode(status int, body any) (int, []byte) {
 	encoded, _ := json.Marshal(body)
 	return status, encoded
