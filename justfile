@@ -11,10 +11,7 @@ update-asn:
     aws s3 cp "$dir/GeoLite2-ASN.mmdb" "s3://$s3_bucket/GeoLite2-ASN.mmdb"
     gcloud storage cp "$dir/GeoLite2-ASN.mmdb" "gs://$gcs_bucket/GeoLite2-ASN.mmdb"
 
-deploy cloud:
-    @"{{just_executable()}}" "_deploy-{{cloud}}"
-
-_deploy-all: _push-aws
+deploy: _push-aws
     #!/usr/bin/env bash
     set -euo pipefail
     "{{just_executable()}}" _switch-aws &
@@ -27,14 +24,12 @@ _deploy-all: _push-aws
     wait "$google_cloud_pid" || google_cloud_status=$?
     echo "aws=$aws_status google-cloud=$google_cloud_status"
     if [ "$aws_status" -ne 0 ]; then
-      echo "Deploying to AWS failed; fix the error above, then run direnv exec {{repo}} just -f {{justfile()}} deploy aws" >&2
+      echo "Deploying to AWS failed; fix the error above, then run direnv exec {{repo}} just -f {{justfile()}} deploy" >&2
     fi
     if [ "$google_cloud_status" -ne 0 ]; then
-      echo "Deploying to Google Cloud failed; fix the error above, then run direnv exec {{repo}} just -f {{justfile()}} deploy google-cloud" >&2
+      echo "Deploying to Google Cloud failed; fix the error above, then run direnv exec {{repo}} just -f {{justfile()}} deploy" >&2
     fi
     test "$aws_status" -eq 0 && test "$google_cloud_status" -eq 0
-
-_deploy-aws: _push-aws _switch-aws
 
 _push-aws:
     #!/usr/bin/env bash
@@ -75,7 +70,7 @@ _switch-aws:
     wait "$result_api_pid" || failed+=(tsujiura-result-api)
     wait "$frontend_pid" || failed+=(tsujiura-frontend)
     if [ "${#failed[@]}" -ne 0 ]; then
-      echo "lambroll deploy failed for ${failed[*]}; fix the error in the lambroll output above, then run direnv exec {{repo}} just -f {{justfile()}} deploy aws" >&2
+      echo "lambroll deploy failed for ${failed[*]}; fix the error in the lambroll output above, then run direnv exec {{repo}} just -f {{justfile()}} deploy" >&2
       exit 1
     fi
 
@@ -146,7 +141,7 @@ _deploy-google-cloud:
     wait "$result_api_pid" || failed+=(tsujiura-result-api)
     wait "$frontend_pid" || failed+=(tsujiura-frontend)
     if [ "${#failed[@]}" -ne 0 ]; then
-      echo "gcloud functions deploy failed for ${failed[*]}; fix the error in the gcloud output above, then run direnv exec {{repo}} just -f {{justfile()}} deploy google-cloud" >&2
+      echo "gcloud functions deploy failed for ${failed[*]}; fix the error in the gcloud output above, then run direnv exec {{repo}} just -f {{justfile()}} deploy" >&2
       exit 1
     fi
 
