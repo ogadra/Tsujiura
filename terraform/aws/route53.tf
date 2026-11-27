@@ -1,9 +1,45 @@
+resource "aws_route53_delegation_set" "tsujiura" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
+}
+
+resource "aws_route53_zone" "tsujiura" {
+  # checkov:skip=CKV2_AWS_38:Signing here alone would make resolvers reject the answers of the unsigned peer Cloud DNS zone
+  # checkov:skip=CKV2_AWS_39:aws_route53_query_log.tsujiura attaches query logging under the same count
+  count = local.route53_up ? 1 : 0
+
+  name              = local.domain_name
+  delegation_set_id = aws_route53_delegation_set.tsujiura.id
+
+  tags = local.common_tags
+}
+
+resource "aws_route53_record" "tsujiura_apex_ns" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
+  count = local.route53_up ? 1 : 0
+
+  zone_id         = aws_route53_zone.tsujiura[0].zone_id
+  name            = local.domain_name
+  type            = "NS"
+  ttl             = 10
+  allow_overwrite = true
+
+  records = local.apex_ns_rrset
+
+  lifecycle {
+    precondition {
+      condition     = length(distinct(local.apex_ns_rrset)) == 8
+      error_message = "The apex NS RRset must hold 8 distinct name servers, 4 from each provider."
+    }
+  }
+}
+
 resource "aws_route53_query_log" "tsujiura" {
   # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
+  count      = local.route53_up ? 1 : 0
   depends_on = [aws_cloudwatch_log_resource_policy.route53_query_log]
 
   cloudwatch_log_group_arn = aws_cloudwatch_log_group.route53_query_log.arn
-  zone_id                  = data.aws_route53_zone.tsujiura.zone_id
+  zone_id                  = aws_route53_zone.tsujiura[0].zone_id
 }
 
 resource "aws_route53_health_check" "tsujiura_frontend" {
@@ -25,9 +61,9 @@ resource "aws_route53_health_check" "tsujiura_frontend" {
 resource "aws_route53_record" "tsujiura_apex_a" {
   # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   # checkov:skip=CKV2_AWS_23:Points to the static IPs of Global Accelerator and the Google Cloud LB
-  for_each = local.frontend_ips
+  for_each = local.route53_up ? local.frontend_ips : {}
 
-  zone_id                          = data.aws_route53_zone.tsujiura.zone_id
+  zone_id                          = aws_route53_zone.tsujiura[0].zone_id
   name                             = local.domain_name
   type                             = "A"
   ttl                              = 10
@@ -41,9 +77,9 @@ resource "aws_route53_record" "tsujiura_apex_a" {
 resource "aws_route53_record" "tsujiura_wildcard_a" {
   # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   # checkov:skip=CKV2_AWS_23:Points to the static IPs of Global Accelerator and the Google Cloud LB
-  for_each = local.frontend_ips
+  for_each = local.route53_up ? local.frontend_ips : {}
 
-  zone_id                          = data.aws_route53_zone.tsujiura.zone_id
+  zone_id                          = aws_route53_zone.tsujiura[0].zone_id
   name                             = "*.${local.domain_name}"
   type                             = "A"
   ttl                              = 10
@@ -56,7 +92,9 @@ resource "aws_route53_record" "tsujiura_wildcard_a" {
 
 resource "aws_route53_record" "tsujiura_acm_validation" {
   # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
-  zone_id = data.aws_route53_zone.tsujiura.zone_id
+  count = local.route53_up ? 1 : 0
+
+  zone_id = aws_route53_zone.tsujiura[0].zone_id
   name    = local.acm_validation_record.name
   type    = local.acm_validation_record.type
   ttl     = 10
@@ -66,7 +104,9 @@ resource "aws_route53_record" "tsujiura_acm_validation" {
 
 resource "aws_route53_record" "tsujiura_soa" {
   # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
-  zone_id         = data.aws_route53_zone.tsujiura.zone_id
+  count = local.route53_up ? 1 : 0
+
+  zone_id         = aws_route53_zone.tsujiura[0].zone_id
   name            = local.domain_name
   type            = "SOA"
   ttl             = 10
