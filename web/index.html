@@ -173,6 +173,13 @@
       line-height: 1.5;
     }
 
+    #status {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(0.875rem, 3.4vw, 1.0625rem);
+      font-weight: 500;
+    }
+
     #result {
       font-size: clamp(0.875rem, 3.4vw, 1.0625rem);
       font-weight: 500;
@@ -281,6 +288,16 @@
       font-weight: 700;
     }
 
+    #result > .message + .detail {
+      margin-top: 0.25rem;
+    }
+
+    .detail {
+      color: var(--muted);
+      font-size: 0.8125rem;
+      overflow-wrap: anywhere;
+    }
+
     footer {
       width: min(100%, 64rem);
       margin: 0 auto;
@@ -326,7 +343,7 @@
     const TOKEN_COUNT = 10;
     const POLL_INTERVAL_MS = 2000;
     const POLL_TIMEOUT_MS = 60000;
-    const MEASURE_FAILED = "結果を取得できなかったため、計測を止めました";
+    const MEASURE_FAILED = "結果を取得できませんでした";
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -344,7 +361,11 @@
 
     async function fetchResult(token) {
       const response = await fetch(`/api/result?token=${token}`);
-      return { status: response.status, body: await response.json() };
+      try {
+        return { status: response.status, body: await response.json() };
+      } catch (error) {
+        throw new Error(`HTTP ${response.status}: ${error.message}`);
+      }
     }
 
     async function pollToken(token, deadline, run) {
@@ -456,29 +477,40 @@
       const failed = results.filter((result) => result.status !== 200);
       if (failed.length > 0) {
         const databases = new Set(failed.flatMap((result) => result.body.unavailable ?? []));
-        const reason = databases.size > 0 ? `${[...databases].join("、")}を読めなかったため、計測を止めました` : MEASURE_FAILED;
-        return [providersTable([answersRow(results)]), element("p", reason, "message")];
+        if (databases.size > 0) {
+          return [providersTable([answersRow(results)]), element("p", `${[...databases].join("、")}を読めなかったため、計測を止めました`, "message")];
+        }
+        const statuses = [...new Set(failed.map((result) => `HTTP ${result.status}`))].join("、");
+        return [providersTable([answersRow(results)]), element("p", MEASURE_FAILED, "message"), element("p", statuses, "detail")];
       }
       const breakdown = resolverRows(results);
       const summary = providersTable([answersRow(results), queriesRow(results), ...breakdown]);
       return breakdown.length > 0 ? [summary] : [summary, element("p", "クエリ送信元リゾルバ: なし", "message")];
     }
 
-    const output = document.getElementById("result");
+    function show(nodes) {
+      document.getElementById("result").replaceChildren(...nodes);
+      document.getElementById("result-card").hidden = false;
+      document.getElementById("status").remove();
+    }
+
     try {
-      output.replaceChildren(...summarize(await measure()));
-    } catch {
-      output.replaceChildren(element("p", MEASURE_FAILED, "message"));
+      show(summarize(await measure()));
+    } catch (error) {
+      show([element("p", MEASURE_FAILED, "message"), element("p", error.message, "detail")]);
     }
   </script>
 </head>
 <body>
   <main>
     <h1>Tsujiura</h1>
-    <section class="card" aria-labelledby="result-heading">
-      <h2 id="result-heading">計測結果</h2>
-      <div id="result" aria-live="polite"><p>計測中</p></div>
-    </section>
+    <div aria-live="polite">
+      <p id="status">計測中</p>
+      <section id="result-card" class="card" aria-labelledby="result-heading" hidden>
+        <h2 id="result-heading">計測結果</h2>
+        <div id="result"></div>
+      </section>
+    </div>
   </main>
   <footer>
     <p>This product includes GeoLite Data created by MaxMind, available from <a href="https://www.maxmind.com">https://www.maxmind.com</a>.</p>
