@@ -1,23 +1,7 @@
 locals {
-  parent_domain_name = "ogadra.net"
-  domain_name        = "tsujiura.${local.parent_domain_name}"
-
-  route53_up   = var.dns_down != "route53"
-  cloud_dns_up = var.dns_down != "cloud-dns"
+  domain_name = "tsujiura.ogadra.net"
 
   route53_name_servers = sort(aws_route53_delegation_set.tsujiura.name_servers)
-
-  delegated_name_servers = flatten([
-    for record_set in data.aws_route53_records.tsujiura_delegation.resource_record_sets : [
-      for record in record_set.resource_records : trimsuffix(record.value, ".")
-    ] if record_set.type == "NS"
-  ])
-
-  cloud_dns_name_servers = local.cloud_dns_up ? sort([
-    for name_server in google_dns_managed_zone.tsujiura[0].name_servers : trimsuffix(name_server, ".")
-  ]) : sort(tolist(setsubtract(local.delegated_name_servers, local.route53_name_servers)))
-
-  apex_ns_rrset = concat(local.route53_name_servers, local.cloud_dns_name_servers)
 
   frontend_ips = merge(
     { for index, ip in aws_globalaccelerator_accelerator.tsujiura.ip_sets[0].ip_addresses : "aws-${index}" => ip },
@@ -36,11 +20,6 @@ locals {
   common_tags = {
     Project   = "Tsujiura"
     ManagedBy = "terraform"
-  }
-
-  common_labels = {
-    project    = "tsujiura"
-    managed_by = "terraform"
   }
 
   public_subnet_cidrs = {

@@ -6,15 +6,6 @@ data "aws_region" "use1" {
   provider = aws.use1
 }
 
-data "aws_route53_zone" "parent" {
-  name = local.parent_domain_name
-}
-
-data "aws_route53_records" "tsujiura_delegation" {
-  zone_id    = data.aws_route53_zone.parent.zone_id
-  name_regex = format("^%s\\.$", replace(local.domain_name, ".", "\\."))
-}
-
 # lambroll owns the function, so it must be deployed before this can be read.
 data "aws_lambda_function" "ingest_route53" {
   provider = aws.use1
