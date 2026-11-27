@@ -22,11 +22,6 @@ resource "google_certificate_manager_certificate" "frontend" {
   }
 
   labels = local.common_labels
-
-  depends_on = [
-    aws_route53_record.tsujiura_dns_authorization,
-    google_dns_record_set.tsujiura_dns_authorization,
-  ]
 }
 
 resource "google_certificate_manager_certificate_map" "frontend" {
