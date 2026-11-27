@@ -163,3 +163,33 @@ resource "aws_iam_role_policy" "google_cloud_result_api" {
   role   = aws_iam_role.google_cloud_result_api.id
   policy = data.aws_iam_policy_document.result_api.json
 }
+
+data "aws_iam_policy_document" "ecs_tasks_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+}
+
+resource "aws_iam_role" "ecs_execution" {
+  name               = "tsujiura-ecs-execution"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume.json
+
+  tags = local.common_tags
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_execution" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
+  role       = aws_iam_role.ecs_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}

@@ -74,3 +74,49 @@ resource "aws_vpc_security_group_ingress_rule" "tsujiura_alb_https" {
 
   tags = local.common_tags
 }
+
+resource "aws_vpc_security_group_egress_rule" "tsujiura_alb_ecs" {
+  for_each = local.ecs_container_ports
+
+  security_group_id            = aws_security_group.tsujiura_alb.id
+  description                  = "HTTP from the ALB to the ${each.key} container"
+  referenced_security_group_id = aws_security_group.tsujiura_ecs.id
+  from_port                    = each.value
+  to_port                      = each.value
+  ip_protocol                  = "tcp"
+
+  tags = local.common_tags
+}
+
+resource "aws_security_group" "tsujiura_ecs" {
+  # checkov:skip=CKV2_AWS_5:ecspresso attaches the group to the ECS service
+  name        = "tsujiura-ecs"
+  description = "HTTP from the ALB to the ECS tasks"
+  vpc_id      = aws_vpc.tsujiura.id
+
+  tags = local.common_tags
+}
+
+resource "aws_vpc_security_group_ingress_rule" "tsujiura_ecs_alb" {
+  for_each = local.ecs_container_ports
+
+  security_group_id            = aws_security_group.tsujiura_ecs.id
+  description                  = "HTTP from the ALB to the ${each.key} container"
+  referenced_security_group_id = aws_security_group.tsujiura_alb.id
+  from_port                    = each.value
+  to_port                      = each.value
+  ip_protocol                  = "tcp"
+
+  tags = local.common_tags
+}
+
+resource "aws_vpc_security_group_egress_rule" "tsujiura_ecs_https" {
+  security_group_id = aws_security_group.tsujiura_ecs.id
+  description       = "HTTPS from the ECS tasks to AWS and Google Cloud APIs"
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+
+  tags = local.common_tags
+}

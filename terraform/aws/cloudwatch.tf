@@ -27,3 +27,12 @@ resource "aws_cloudwatch_log_subscription_filter" "ingest_route53" {
   filter_pattern  = ""
   destination_arn = data.aws_lambda_function.ingest_route53.arn
 }
+
+resource "aws_cloudwatch_log_group" "tsujiura_ecs" {
+  # checkov:skip=CKV_AWS_158:KMS encryption is not required for this use case
+  # checkov:skip=CKV_AWS_338:Task logs are only read while debugging, so two weeks of retention is enough
+  name              = "/ecs/tsujiura"
+  retention_in_days = 14
+
+  tags = local.common_tags
+}
