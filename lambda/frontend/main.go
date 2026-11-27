@@ -1,38 +1,44 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"log"
 	"net/http"
-	"os"
-	"path/filepath"
+	"net/http/httptest"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+
+	"github.com/ogadra/Tsujiura/web"
 )
 
-var assets = map[string]struct{ file, contentType string }{
-	"/":             {"index.html", "text/html; charset=utf-8"},
-	"/provider.svg": {"provider/aws.svg", "image/svg+xml"},
-}
+type site struct{ handler http.Handler }
 
-type site struct{ dir string }
-
-func (s site) handle(request events.ALBTargetGroupRequest) (events.ALBTargetGroupResponse, error) {
-	asset, ok := assets[request.Path]
-	if !ok {
-		return events.ALBTargetGroupResponse{StatusCode: http.StatusNotFound, StatusDescription: "404 Not Found"}, nil
-	}
-	body, err := os.ReadFile(filepath.Join(s.dir, asset.file))
+func (s site) handle(ctx context.Context, request events.ALBTargetGroupRequest) (events.ALBTargetGroupResponse, error) {
+	r, err := http.NewRequestWithContext(ctx, request.HTTPMethod, request.Path, strings.NewReader(request.Body))
 	if err != nil {
 		return events.ALBTargetGroupResponse{}, err
 	}
+	w := httptest.NewRecorder()
+	s.handler.ServeHTTP(w, r)
+	headers := make(map[string]string, len(w.Header()))
+	for name := range w.Header() {
+		headers[name] = w.Header().Get(name)
+	}
 	return events.ALBTargetGroupResponse{
-		StatusCode:        http.StatusOK,
-		StatusDescription: "200 OK",
-		Headers:           map[string]string{"Content-Type": asset.contentType},
-		Body:              string(body),
+		StatusCode:        w.Code,
+		StatusDescription: fmt.Sprintf("%d %s", w.Code, http.StatusText(w.Code)),
+		Headers:           headers,
+		Body:              w.Body.String(),
 	}, nil
 }
 
 func main() {
-	lambda.Start(site{"web"}.handle)
+	h, err := web.Handler("aws")
+	if err != nil {
+		log.Fatal(err)
+	}
+	lambda.Start(site{h}.handle)
 }
