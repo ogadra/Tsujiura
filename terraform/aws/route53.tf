@@ -63,3 +63,14 @@ resource "aws_route53_record" "tsujiura_acm_validation" {
 
   records = [local.acm_validation_record.value]
 }
+
+resource "aws_route53_record" "tsujiura_soa" {
+  # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
+  zone_id         = data.aws_route53_zone.tsujiura.zone_id
+  name            = local.domain_name
+  type            = "SOA"
+  ttl             = 10
+  allow_overwrite = true
+
+  records = ["ns-798.awsdns-35.net. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 10"]
+}
