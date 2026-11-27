@@ -19,7 +19,7 @@ func TestHandle(t *testing.T) {
 		path, contentType, body, description string
 		status                               int
 	}{
-		{"/", "text/html; charset=utf-8", "<title>Tsujiura</title>", "200 OK", 200},
+		{"/", "text/html; charset=utf-8", "<strong>AWS</strong>", "200 OK", 200},
 		{"/provider.svg", "image/svg+xml", `width="1"`, "200 OK", 200},
 		{"/missing", "", "", "404 Not Found", 404},
 	}

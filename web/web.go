@@ -1,7 +1,10 @@
 package web
 
 import (
+	"bytes"
 	"embed"
+	"fmt"
+	"html/template"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -9,6 +12,11 @@ import (
 
 //go:embed index.html provider/*.svg
 var files embed.FS
+
+var providerNames = map[string]string{
+	"aws":          "AWS",
+	"google-cloud": "Google Cloud",
+}
 
 type asset struct {
 	body        []byte
@@ -18,8 +26,16 @@ type asset struct {
 type site map[string]asset
 
 func Handler(provider string) (http.Handler, error) {
-	index, err := fs.ReadFile(files, "index.html")
+	name, ok := providerNames[provider]
+	if !ok {
+		return nil, fmt.Errorf("unknown provider %q", provider)
+	}
+	page, err := template.ParseFS(files, "index.html")
 	if err != nil {
+		return nil, err
+	}
+	var index bytes.Buffer
+	if err := page.Execute(&index, struct{ Provider, Name string }{provider, name}); err != nil {
 		return nil, err
 	}
 	svg, err := fs.ReadFile(files, "provider/"+provider+".svg")
@@ -27,7 +43,7 @@ func Handler(provider string) (http.Handler, error) {
 		return nil, err
 	}
 	return site{
-		"/":             {index, "text/html; charset=utf-8"},
+		"/":             {index.Bytes(), "text/html; charset=utf-8"},
 		"/provider.svg": {svg, "image/svg+xml"},
 	}, nil
 }

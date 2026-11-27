@@ -327,6 +327,49 @@
       }
     }
 
+    .served-by {
+      position: relative;
+      width: fit-content;
+      max-width: 100%;
+      margin: 0 0 1rem auto;
+      padding: 0.3em 0.93em 0.5em;
+      background: var(--served-by);
+      color: var(--served-by-text);
+      font-size: clamp(0.8125rem, 3.9vw, 1.5rem);
+      font-weight: 700;
+      line-height: 1.4;
+      white-space: nowrap;
+      transform: rotate(-0.5deg);
+      -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 64' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 4.5C72 1 150 6.5 230 3C300 0.5 350 4.5 393 1.5Q399 1 398.8 7C397 22 400.5 40 398.5 57Q398 63 392 62.8C326 60 258 64 180 61C110 58.5 50 63.5 6.5 60.8Q0.5 60.5 1 54.5C3 40 -0.5 24 2 11Q2.5 5 8 4.5Z'/%3E%3C/svg%3E") 50% / 100% 100% no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 64' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 4.5C72 1 150 6.5 230 3C300 0.5 350 4.5 393 1.5Q399 1 398.8 7C397 22 400.5 40 398.5 57Q398 63 392 62.8C326 60 258 64 180 61C110 58.5 50 63.5 6.5 60.8Q0.5 60.5 1 54.5C3 40 -0.5 24 2 11Q2.5 5 8 4.5Z'/%3E%3C/svg%3E") 50% / 100% 100% no-repeat;
+    }
+
+    .served-by::before {
+      content: "";
+      position: absolute;
+      inset: 0.25em;
+      pointer-events: none;
+      background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 50' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 4.8C80 2 150 6 235 3.5C300 2 350 5 392 2.8Q397 2.5 396.8 7.5C395.5 19 398 32 396.3 42Q396 47 391 46.8C325 45 255 48 180 45.5C110 43.5 55 47.5 9 45.2Q4 45 4.2 40C5.5 30 2.5 18 3 9.8Q3.2 5 8 4.8Z' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-dasharray='7 7' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 50% / 100% 100% no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 50' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M8 4.8C80 2 150 6 235 3.5C300 2 350 5 392 2.8Q397 2.5 396.8 7.5C395.5 19 398 32 396.3 42Q396 47 391 46.8C325 45 255 48 180 45.5C110 43.5 55 47.5 9 45.2Q4 45 4.2 40C5.5 30 2.5 18 3 9.8Q3.2 5 8 4.8Z' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-dasharray='7 7' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") 50% / 100% 100% no-repeat;
+    }
+
+    .served-by strong {
+      margin-left: 0.25rem;
+      font-family: var(--font-display);
+      font-weight: 800;
+    }
+
+    .served-by.aws {
+      --served-by: var(--route53);
+      --served-by-text: #222222;
+    }
+
+    .served-by.google-cloud {
+      --served-by: var(--cloud-dns);
+      --served-by-text: var(--cloud-dns-text);
+    }
+
     a {
       color: var(--link);
       text-underline-offset: 0.2em;
@@ -513,6 +556,7 @@
     </div>
   </main>
   <footer>
+    <p class="served-by {{.Provider}}">このページを返したクラウド <strong>{{.Name}}</strong></p>
     <p>This product includes GeoLite Data created by MaxMind, available from <a href="https://www.maxmind.com">https://www.maxmind.com</a>.</p>
   </footer>
 </body>
