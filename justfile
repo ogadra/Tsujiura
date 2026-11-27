@@ -93,3 +93,47 @@ _deploy-google-cloud:
       --service-account="$frontend_service_account" \
       --no-allow-unauthenticated \
       --ingress-settings=internal-and-gclb
+
+dns action side:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    domain="tsujiura.ogadra.net"
+    case "{{action}}" in
+      down | up) ;;
+      *) echo "action must be down or up" >&2; exit 1 ;;
+    esac
+    case "{{side}}" in
+      route53) records=(aws_route53_record.tsujiura_apex_ns aws_route53_record.tsujiura_soa) ;;
+      cloud-dns) records=(google_dns_record_set.tsujiura_apex_ns google_dns_record_set.tsujiura_soa) ;;
+      *) echo "side must be route53 or cloud-dns" >&2; exit 1 ;;
+    esac
+    root="terraform/dns-{{side}}"
+    plan="$(mktemp --suffix=.tfplan)"
+    if [ "{{action}}" = down ]; then
+      if [ "{{side}}" = route53 ]; then
+        other_zones="$(gcloud dns managed-zones list --filter="dnsName=$domain." --format='value(name)' | wc -l)"
+      else
+        other_zones="$(aws route53 list-hosted-zones-by-name --dns-name "$domain" --query "length(HostedZones[?Name=='$domain.'])" --output text)"
+      fi
+      if [ "$other_zones" != 1 ]; then
+        echo "The other zone of $domain is down; bring it up before taking {{side}} down" >&2
+        exit 1
+      fi
+      terraform -chdir="$root" state rm "${records[@]}"
+      terraform -chdir="$root" plan -destroy -input=false -out="$plan"
+      terraform -chdir="$root" apply -input=false "$plan"
+    else
+      terraform -chdir="$root" plan -input=false -out="$plan"
+      terraform -chdir="$root" apply -input=false "$plan"
+      if [ "{{side}}" = cloud-dns ]; then
+        parent="${domain#*.}"
+        parent_zone_id="$(aws route53 list-hosted-zones-by-name --dns-name "$parent" --query "HostedZones[?Name=='$parent.'].Id" --output text)"
+        delegated="$(aws route53 list-resource-record-sets --hosted-zone-id "$parent_zone_id" --query "ResourceRecordSets[?Name=='$domain.' && Type=='NS'].ResourceRecords[].Value" --output text | tr '\t' '\n' | sed 's/\.$//' | sort)"
+        cloud_dns="$(gcloud dns managed-zones describe "${domain//./-}" --format='value(nameServers)' | tr ';' '\n' | sed 's/\.$//' | sort)"
+        missing="$(comm -13 <(echo "$delegated") <(echo "$cloud_dns"))"
+        if [ -n "$missing" ]; then
+          echo "The $parent delegation lacks these Cloud DNS name servers; update it, then run just dns up route53: $missing" >&2
+          exit 1
+        fi
+      fi
+    fi
