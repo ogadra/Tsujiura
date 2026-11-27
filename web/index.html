@@ -178,6 +178,42 @@
       color: var(--muted);
       font-size: clamp(0.875rem, 3.4vw, 1.0625rem);
       font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem 1rem;
+    }
+
+    #progress-label {
+      flex: none;
+    }
+
+    #progress-count {
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
+    }
+
+    progress {
+      flex: 1;
+      min-width: 0;
+      height: 1rem;
+      border: 2px solid var(--label);
+      border-radius: 999px;
+      background: var(--bg);
+      overflow: hidden;
+      appearance: none;
+    }
+
+    progress::-webkit-progress-bar {
+      background: var(--bg);
+    }
+
+    progress::-webkit-progress-value {
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    progress::-moz-progress-bar {
+      background: var(--accent);
     }
 
     #result {
@@ -424,7 +460,7 @@
       }
     }
 
-    async function measure() {
+    async function measure(onFinish) {
       const tokens = Array.from({ length: TOKEN_COUNT }, () => crypto.randomUUID());
       const deadline = Date.now() + POLL_TIMEOUT_MS;
       const run = { stopped: false };
@@ -432,6 +468,7 @@
         return await Promise.all(
           tokens.map(async (token) => {
             const [, result] = await Promise.all([probeToken(token, deadline), pollToken(token, deadline, run)]);
+            onFinish();
             return result;
           }),
         );
@@ -529,8 +566,17 @@
       document.getElementById("status").remove();
     }
 
+    const progress = document.getElementById("progress");
+    const progressCount = document.getElementById("progress-count");
+    progress.max = TOKEN_COUNT;
+    progressCount.textContent = `0 / ${TOKEN_COUNT}`;
+    const finishToken = () => {
+      progress.value += 1;
+      progressCount.textContent = `${progress.value} / ${TOKEN_COUNT}`;
+    };
+
     try {
-      show(summarize(await measure()));
+      show(summarize(await measure(finishToken)));
     } catch (error) {
       show([element("p", MEASURE_FAILED, "message"), element("p", error.message, "detail")]);
     }
@@ -540,7 +586,7 @@
   <main>
     <h1>Tsujiura</h1>
     <div aria-live="polite">
-      <p id="status">計測中</p>
+      <p id="status"><span id="progress-label">計測中 <span id="progress-count"></span></span><progress id="progress" value="0" aria-labelledby="progress-label"></progress></p>
       <section id="result-card" class="card" aria-labelledby="result-heading" hidden>
         <h2 id="result-heading">計測結果</h2>
         <div id="result"></div>
