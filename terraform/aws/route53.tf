@@ -59,7 +59,7 @@ resource "aws_route53_record" "tsujiura_acm_validation" {
   zone_id = data.aws_route53_zone.tsujiura.zone_id
   name    = local.acm_validation_record.name
   type    = local.acm_validation_record.type
-  ttl     = 60
+  ttl     = 10
 
   records = [local.acm_validation_record.value]
 }

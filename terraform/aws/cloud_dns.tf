@@ -43,7 +43,7 @@ resource "google_dns_record_set" "tsujiura_acm_validation" {
   managed_zone = data.google_dns_managed_zone.tsujiura.name
   name         = local.acm_validation_record.name
   type         = local.acm_validation_record.type
-  ttl          = 60
+  ttl          = 10
 
   rrdatas = [local.acm_validation_record.value]
 }
