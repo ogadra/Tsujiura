@@ -97,6 +97,7 @@ _deploy-google-cloud:
 dns action side:
     #!/usr/bin/env bash
     set -euo pipefail
+    shopt -s inherit_errexit
     domain="tsujiura.ogadra.net"
     case "{{action}}" in
       down | up) ;;
@@ -108,6 +109,9 @@ dns action side:
       *) echo "side must be route53 or cloud-dns" >&2; exit 1 ;;
     esac
     root="terraform/dns-{{side}}"
+    if [ "{{action}}" = up ] && [ "{{side}}" = cloud-dns ]; then
+      : "${OGADRA_NET_TSUJIURA_ROOT:?Set OGADRA_NET_TSUJIURA_ROOT in .env to the Terraform root that delegates $domain, then run just dns up cloud-dns again}"
+    fi
     plan="$(mktemp --suffix=.tfplan)"
     if [ "{{action}}" = down ]; then
       if [ "{{side}}" = route53 ]; then
@@ -127,12 +131,35 @@ dns action side:
       terraform -chdir="$root" apply -input=false "$plan"
       if [ "{{side}}" = cloud-dns ]; then
         parent="${domain#*.}"
-        parent_zone_id="$(aws route53 list-hosted-zones-by-name --dns-name "$parent" --query "HostedZones[?Name=='$parent.'].Id" --output text)"
-        delegated="$(aws route53 list-resource-record-sets --hosted-zone-id "$parent_zone_id" --query "ResourceRecordSets[?Name=='$domain.' && Type=='NS'].ResourceRecords[].Value" --output text | tr '\t' '\n' | sed 's/\.$//' | sort)"
-        cloud_dns="$(gcloud dns managed-zones describe "${domain//./-}" --format='value(nameServers)' | tr ';' '\n' | sed 's/\.$//' | sort)"
-        missing="$(comm -13 <(echo "$delegated") <(echo "$cloud_dns"))"
+        missing_name_servers() {
+          local parent_zone_id delegated cloud_dns
+          parent_zone_id="$(aws route53 list-hosted-zones-by-name --dns-name "$parent" --query "HostedZones[?Name=='$parent.'].Id" --output text)"
+          delegated="$(aws route53 list-resource-record-sets --hosted-zone-id "$parent_zone_id" --query "ResourceRecordSets[?Name=='$domain.' && Type=='NS'].ResourceRecords[].Value" --output text | tr '\t' '\n' | sed 's/\.$//' | sort)"
+          cloud_dns="$(gcloud dns managed-zones describe "${domain//./-}" --format='value(nameServers)' | tr ';' '\n' | sed 's/\.$//' | sort)"
+          comm -13 <(echo "$delegated") <(echo "$cloud_dns")
+        }
+        missing="$(missing_name_servers)"
+        if [ -z "$missing" ]; then
+          exit 0
+        fi
+        delegation_plan="$(mktemp --suffix=.tfplan)"
+        direnv exec "$OGADRA_NET_TSUJIURA_ROOT" terraform -chdir="$OGADRA_NET_TSUJIURA_ROOT" plan -input=false -out="$delegation_plan"
+        changes="$(direnv exec "$OGADRA_NET_TSUJIURA_ROOT" terraform -chdir="$OGADRA_NET_TSUJIURA_ROOT" show -json "$delegation_plan")"
+        delegation_updates="$(jq --arg domain "$domain" '[.resource_changes[] | select((.type == "aws_route53_record" or .type == "google_dns_record_set") and .change.actions == ["update"] and .change.after.type == "NS" and (.change.after.name | rtrimstr(".")) == $domain)] | length' <<<"$changes")"
+        unexpected="$(jq -r --arg domain "$domain" '.resource_changes[] | select(.change.actions != ["no-op"]) | select(((.type == "aws_route53_record" or .type == "google_dns_record_set") and .change.actions == ["update"] and .change.after.type == "NS" and (.change.after.name | rtrimstr(".")) == $domain) | not) | "\(.address) (\(.change.actions | join(",")))"' <<<"$changes")"
+        if [ -n "$unexpected" ]; then
+          echo "The plan of $OGADRA_NET_TSUJIURA_ROOT changes more than updating the two NS records delegating $domain; settle these differences in that root, then run just dns up cloud-dns again: $unexpected" >&2
+          exit 1
+        fi
+        if [ "$delegation_updates" != 2 ]; then
+          echo "The plan of $OGADRA_NET_TSUJIURA_ROOT updates $delegation_updates of the two NS records delegating $domain; make that root update both the Route53 and Cloud DNS delegation, then run just dns up cloud-dns again" >&2
+          exit 1
+        fi
+        direnv exec "$OGADRA_NET_TSUJIURA_ROOT" terraform -chdir="$OGADRA_NET_TSUJIURA_ROOT" apply -input=false "$delegation_plan"
+        "{{just_executable()}}" dns up route53
+        missing="$(missing_name_servers)"
         if [ -n "$missing" ]; then
-          echo "The $parent delegation lacks these Cloud DNS name servers; update it, then run just dns up route53: $missing" >&2
+          echo "The $parent delegation still lacks these Cloud DNS name servers after applying $OGADRA_NET_TSUJIURA_ROOT and dns route53; check both roots, then run just dns up cloud-dns again: $missing" >&2
           exit 1
         fi
       fi
