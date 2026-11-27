@@ -100,3 +100,26 @@ resource "aws_lb_target_group_attachment" "result_api" {
   target_group_arn = aws_lb_target_group.result_api.arn
   target_id        = data.aws_lambda_function.result_api.arn
 }
+
+resource "aws_lb_target_group" "tsujiura_ecs" {
+  # checkov:skip=CKV_AWS_378:The ALB ends TLS and reaches the tasks only inside the VPC
+  for_each = local.ecs_container_ports
+
+  name                 = "tsujiura-ecs-${each.key}"
+  target_type          = "ip"
+  protocol             = "HTTP"
+  port                 = each.value
+  vpc_id               = aws_vpc.tsujiura.id
+  deregistration_delay = 30
+
+  health_check {
+    path                = "/healthz"
+    matcher             = "200"
+    interval            = 5
+    timeout             = 2
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+
+  tags = local.common_tags
+}

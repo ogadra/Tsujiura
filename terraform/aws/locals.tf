@@ -20,6 +20,12 @@ locals {
     ManagedBy = "terraform"
   }
 
+  ecs_container_ports = {
+    "frontend"       = 8080
+    "result-api"     = 8081
+    "ingest-route53" = 8082
+  }
+
   public_subnet_cidrs = {
     "ap-northeast-1a" = "10.0.0.0/24"
     "ap-northeast-1c" = "10.0.1.0/24"
