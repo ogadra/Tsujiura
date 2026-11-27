@@ -80,6 +80,38 @@ resource "google_service_account" "frontend" {
   display_name = "Tsujiura frontend function"
 }
 
+resource "google_service_account" "build" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  account_id   = "tsujiura-build"
+  display_name = "Tsujiura function build"
+}
+
+resource "google_project_iam_member" "build_logs" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  project = data.google_project.current.project_id
+  role    = "roles/logging.logWriter"
+  member  = google_service_account.build.member
+}
+
+resource "google_project_iam_member" "build_artifacts" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  project = data.google_project.current.project_id
+  role    = "roles/artifactregistry.writer"
+  member  = google_service_account.build.member
+}
+
+resource "google_project_iam_member" "build_sources" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  project = data.google_project.current.project_id
+  role    = "roles/storage.objectViewer"
+  member  = google_service_account.build.member
+
+  condition {
+    title      = "tsujiura-build-sources"
+    expression = "resource.type == \"storage.googleapis.com/Object\" && (resource.name.startsWith(\"projects/_/buckets/gcf-v2-sources-\") || resource.name.startsWith(\"projects/_/buckets/gcf-v2-uploads-\") || resource.name.startsWith(\"projects/_/buckets/run-sources-\"))"
+  }
+}
+
 resource "google_project_service" "iam" {
   # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
   service            = "iam.googleapis.com"

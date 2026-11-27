@@ -46,6 +46,7 @@ _deploy-google-cloud:
     asn_bucket="$(terraform -chdir=terraform/google-cloud output -raw asn_bucket)"
     result_api_service_account="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
     frontend_service_account="$(terraform -chdir=terraform/google-cloud output -raw frontend_service_account)"
+    build_service_account="$(terraform -chdir=terraform/google-cloud output -raw build_service_account)"
     results_table_name="$(terraform -chdir=terraform/aws output -raw results_table_name)"
     results_table_region="$(terraform -chdir=terraform/aws output -raw results_table_region)"
     role_arn="$(terraform -chdir=terraform/aws output -raw google_cloud_result_api_role_arn)"
@@ -62,6 +63,7 @@ _deploy-google-cloud:
       --runtime=go127 \
       --source="$ingest_source_dir" \
       --entry-point=IngestCloudDNS \
+      --build-service-account="$build_service_account" \
       --trigger-topic="$topic" \
       --trigger-service-account="$trigger_service_account" \
       --service-account="$ingest_service_account" \
@@ -74,6 +76,7 @@ _deploy-google-cloud:
       --runtime=go127 \
       --source="$result_api_source_dir" \
       --entry-point=ResultAPI \
+      --build-service-account="$build_service_account" \
       --trigger-http \
       --service-account="$result_api_service_account" \
       --no-allow-unauthenticated \
@@ -85,6 +88,7 @@ _deploy-google-cloud:
       --runtime=go127 \
       --source="$frontend_source_dir" \
       --entry-point=Frontend \
+      --build-service-account="$build_service_account" \
       --trigger-http \
       --service-account="$frontend_service_account" \
       --no-allow-unauthenticated \
