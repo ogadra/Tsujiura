@@ -4,6 +4,286 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tsujiura</title>
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Solway:wght@500;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fffaed;
+      --surface: #ffffff;
+      --ink: #222222;
+      --heading: #004aba;
+      --muted: #616161;
+      --link: #004aba;
+      --accent: #ea5520;
+      --rule: #a7a7a7;
+      --table-rule: #dcdcdc;
+      --route53: #ea5520;
+      --route53-text: #ffffff;
+      --route53-tint: #fcebe4;
+      --cloud-dns: #004aba;
+      --cloud-dns-text: #ffffff;
+      --cloud-dns-tint: #e0e9f7;
+      --label: #222222;
+      --shadow: rgba(34, 34, 34, 0.06);
+      --font-body: "Zen Maru Gothic", "Hiragino Maru Gothic ProN", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", "Meiryo", sans-serif;
+      --font-display: "Solway", "Rockwell", "Roboto Slab", Georgia, "Times New Roman", serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b2440;
+        --surface: #10355e;
+        --ink: #fffaed;
+        --heading: #fffaed;
+        --muted: #c9cfd8;
+        --link: #8db8ff;
+        --rule: rgba(255, 250, 237, 0.35);
+        --table-rule: rgba(255, 250, 237, 0.15);
+        --route53-tint: #313a55;
+        --cloud-dns: #8db8ff;
+        --cloud-dns-text: #222222;
+        --cloud-dns-tint: #234976;
+        --label: #fffaed;
+        --shadow: rgba(0, 0, 0, 0.25);
+      }
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-feature-settings: "palt";
+      line-height: 1.75;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    main {
+      flex: 1;
+      width: min(100%, 64rem);
+      margin: 0 auto;
+      padding: clamp(2.5rem, 8vw, 5rem) clamp(1rem, 5vw, 2.5rem) 2.5rem;
+    }
+
+    h1 {
+      margin: 0 0 clamp(1.75rem, 5vw, 2.5rem);
+      color: var(--heading);
+      font-family: var(--font-display);
+      font-size: clamp(2.75rem, 12vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+    }
+
+    h1::after {
+      content: "";
+      display: block;
+      width: 4.5rem;
+      height: 0.5rem;
+      margin-top: 0.75rem;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .card {
+      --stitch-inset: 0.5rem;
+      position: relative;
+      padding: clamp(1.5rem, 5vw, 2.25rem) clamp(1rem, 5vw, 2.75rem);
+      border-radius: 20px;
+      background: var(--surface);
+      box-shadow: 0 10px 0 var(--shadow);
+    }
+
+    @media (min-width: 40rem) {
+      .card {
+        --stitch-inset: 0.75rem;
+      }
+    }
+
+    .card::before {
+      border-radius: inherit;
+      content: "";
+      inset: var(--stitch-inset);
+      pointer-events: none;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+      position: absolute;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0.5' y='0.5' width='99' height='99' rx='4' ry='4' fill='none' stroke='%23a7a7a7' stroke-width='2' stroke-linecap='round' stroke-dasharray='6 12' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+    }
+
+    .card h2 {
+      display: inline-block;
+      margin: 0 0 1.25rem;
+      padding: 0.25rem 0.75rem;
+      border: 2px solid var(--label);
+      border-radius: 999px;
+      font-size: clamp(0.875rem, 3vw, 1rem);
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    #result {
+      font-size: clamp(0.875rem, 3.4vw, 1.0625rem);
+      font-weight: 500;
+      overflow-wrap: break-word;
+    }
+
+    #result > * + * {
+      margin-top: 1.5rem;
+    }
+
+    #result p {
+      margin: 0;
+    }
+
+    table {
+      --column-gap: clamp(0.25rem, 1vw, 0.5rem);
+      width: calc(100% + 2 * var(--column-gap));
+      margin-inline: calc(-1 * var(--column-gap));
+      border-collapse: separate;
+      border-spacing: var(--column-gap) 0;
+    }
+
+    caption {
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    th,
+    td {
+      padding: 0.75rem clamp(0.25rem, 1.5vw, 0.5rem);
+      border-top: 1px dashed var(--table-rule);
+      text-align: center;
+      vertical-align: baseline;
+    }
+
+    thead th {
+      vertical-align: middle;
+      color: var(--muted);
+      font-family: var(--font-display);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    thead th.provider {
+      border-top: 0;
+      border-radius: 0.5rem 0.5rem 0 0;
+      background: var(--provider);
+      color: var(--provider-text);
+      font-size: 1.1875rem;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    td.count {
+      border-top-color: transparent;
+      background: var(--provider-tint);
+    }
+
+    tbody tr:last-child td.count {
+      border-radius: 0 0 0.5rem 0.5rem;
+    }
+
+    .route53 {
+      --provider: var(--route53);
+      --provider-text: var(--route53-text);
+      --provider-tint: var(--route53-tint);
+    }
+
+    .cloud-dns {
+      --provider: var(--cloud-dns);
+      --provider-text: var(--cloud-dns-text);
+      --provider-tint: var(--cloud-dns-tint);
+    }
+
+    tbody th {
+      font-weight: 700;
+    }
+
+    th:first-child {
+      text-align: left;
+    }
+
+    tr.breakdown > * {
+      color: var(--muted);
+    }
+
+    tr.breakdown > th {
+      padding-left: 1rem;
+      font-size: 0.875em;
+      font-weight: 500;
+    }
+
+    tr.breakdown > th::before {
+      content: "└ ";
+    }
+
+    td.count {
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .message {
+      font-weight: 700;
+    }
+
+    footer {
+      width: min(100%, 64rem);
+      margin: 0 auto;
+      padding: 1.5rem clamp(1rem, 5vw, 2.5rem) 2rem;
+      color: var(--muted);
+      font-size: 0.8125rem;
+      overflow-wrap: anywhere;
+    }
+
+    footer p {
+      margin: 0;
+    }
+
+    @media (max-width: 30rem) {
+      main,
+      footer {
+        padding-inline: 0.5rem;
+      }
+
+      .card {
+        padding-inline: 1rem;
+      }
+
+      th,
+      td {
+        padding-inline: 0.125rem;
+      }
+    }
+
+    a {
+      color: var(--link);
+      text-underline-offset: 0.2em;
+    }
+
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 4px;
+      border-radius: 0.25rem;
+    }
+  </style>
   <script type="module">
     const DOMAIN = location.hostname;
     const TOKEN_COUNT = 10;
@@ -61,64 +341,110 @@
       }
     }
 
-    function summarizeAnswers(results) {
-      const count = (provider) => results.filter((result) => result.answeredBy === provider).length;
+    function element(tag, text, className) {
+      const node = document.createElement(tag);
+      node.textContent = text;
+      if (className) {
+        node.className = className;
+      }
+      return node;
+    }
+
+    function table(caption, head, rows) {
+      const node = document.createElement("table");
+      if (caption) {
+        node.createCaption().textContent = caption;
+      }
+      const headRow = node.createTHead().insertRow();
+      for (const label of head) {
+        const cell = element("th", label.text ?? label, label.className);
+        cell.scope = "col";
+        headRow.append(cell);
+      }
+      const body = node.createTBody();
+      for (const [label, ...values] of rows) {
+        const row = body.insertRow();
+        if (label.className) {
+          row.className = label.className;
+        }
+        const cell = element("th", label.text ?? label);
+        cell.scope = "row";
+        row.append(cell, ...values.map((value) => element("td", value.text, value.className)));
+      }
+      return node;
+    }
+
+    const ROUTE53_HEAD = { text: "Route53", className: "provider route53" };
+    const CLOUD_DNS_HEAD = { text: "Cloud DNS", className: "provider cloud-dns" };
+
+    const count = (n, unit, provider) => ({ text: `${n}${unit}`, className: `count ${provider}` });
+
+    function answersRow(results) {
+      const answered = (provider) => results.filter((result) => result.answeredBy === provider).length;
       const unknown = results.filter((result) => result.answeredBy === null).length;
-      return `ブラウザが使った答え: Route53 ${count("route53")}回、Cloud DNS ${count("cloudDns")}回、判別できなかった ${unknown}個`;
+      return ["採用された権威 DNS", count(answered("route53"), "件", "route53"), count(answered("cloudDns"), "件", "cloud-dns"), unknown > 0 ? { text: `判別不可 ${unknown}件` } : null];
     }
 
-    function summarizeQueries(results) {
-      const count = (provider) => results.filter((result) => result.body[provider]).length;
+    function queriesRow(results) {
+      const reached = (provider) => results.filter((result) => result.body[provider]).length;
       const missing = results.filter((result) => !result.body.route53 && !result.body.cloudDns).length;
-      return `問い合わせが届いた先: Route53 ${count("route53")}回、Cloud DNS ${count("cloudDns")}回、どちらにも届かなかった ${missing}個`;
+      return ["クエリを受信した権威 DNS", count(reached("route53"), "件", "route53"), count(reached("cloudDns"), "件", "cloud-dns"), missing > 0 ? { text: `未到達 ${missing}件` } : null];
     }
 
-    function summarizeResolvers(results) {
+    function providersTable(rows) {
+      if (rows.some((row) => row[3])) {
+        return table("権威 DNS", ["", ROUTE53_HEAD, CLOUD_DNS_HEAD, ""], rows.map((row) => [...row.slice(0, 3), row[3] ?? { text: "" }]));
+      }
+      return table("権威 DNS", ["", ROUTE53_HEAD, CLOUD_DNS_HEAD], rows.map((row) => row.slice(0, 3)));
+    }
+
+    function resolverRows(results) {
       const resolvers = new Map();
       for (const result of results) {
-        for (const [provider, name] of [["route53", "Route53"], ["cloudDns", "Cloud DNS"]]) {
+        for (const provider of ["route53", "cloudDns"]) {
           const record = result.body[provider];
           if (!record) {
             continue;
           }
-          const resolver = record.asn ? `AS${record.asn} ${record.asOrganization ?? ""}`.trim() : "ASN不明";
-          const counts = resolvers.get(resolver) ?? new Map();
-          counts.set(name, (counts.get(name) ?? 0) + 1);
-          resolvers.set(resolver, counts);
+          const key = record.asn ? `AS${record.asn} ${record.asOrganization ?? ""}`.trim() : "ASN不明";
+          const resolver = resolvers.get(key) ?? { route53: 0, cloudDns: 0 };
+          resolver[provider] += 1;
+          resolvers.set(key, resolver);
         }
       }
-      if (resolvers.size === 0) {
-        return "問い合わせたリゾルバ: なし";
-      }
-      const lines = [...resolvers].map(([resolver, counts]) => {
-        const perProvider = [...counts].map(([name, n]) => `${name} ${n}回`).join("、");
-        return `${resolver}(${perProvider})`;
-      });
-      return `問い合わせたリゾルバ: ${lines.join("、")}`;
+      return [...resolvers].map(([key, resolver]) => [{ text: key, className: "breakdown" }, count(resolver.route53, "件", "route53"), count(resolver.cloudDns, "件", "cloud-dns"), null]);
     }
 
     function summarize(results) {
-      const answers = summarizeAnswers(results);
       const failed = results.filter((result) => result.status !== 200);
       if (failed.length > 0) {
         const databases = new Set(failed.flatMap((result) => result.body.unavailable ?? []));
         const reason = databases.size > 0 ? `${[...databases].join("、")}を読めなかったため、計測を止めました` : MEASURE_FAILED;
-        return [answers, reason].join("\n");
+        return [providersTable([answersRow(results)]), element("p", reason, "message")];
       }
-      return [answers, summarizeQueries(results), summarizeResolvers(results)].join("\n");
+      const breakdown = resolverRows(results);
+      const summary = providersTable([answersRow(results), queriesRow(results), ...breakdown]);
+      return breakdown.length > 0 ? [summary] : [summary, element("p", "クエリ送信元リゾルバ: なし", "message")];
     }
 
     const output = document.getElementById("result");
     try {
-      output.textContent = summarize(await measure());
+      output.replaceChildren(...summarize(await measure()));
     } catch {
-      output.textContent = MEASURE_FAILED;
+      output.replaceChildren(element("p", MEASURE_FAILED, "message"));
     }
   </script>
 </head>
 <body>
-  <h1>Tsujiura</h1>
-  <p id="result" style="white-space: pre-line">計測中</p>
-  <p>This product includes GeoLite Data created by MaxMind, available from <a href="https://www.maxmind.com">https://www.maxmind.com</a>.</p>
+  <main>
+    <h1>Tsujiura</h1>
+    <section class="card" aria-labelledby="result-heading">
+      <h2 id="result-heading">計測結果</h2>
+      <div id="result" aria-live="polite"><p>計測中</p></div>
+    </section>
+  </main>
+  <footer>
+    <p>This product includes GeoLite Data created by MaxMind, available from <a href="https://www.maxmind.com">https://www.maxmind.com</a>.</p>
+  </footer>
 </body>
 </html>
