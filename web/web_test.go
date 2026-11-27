@@ -14,9 +14,11 @@ func TestHandler(t *testing.T) {
 	}{
 		{"aws", "/", "text/html; charset=utf-8", "<title>Tsujiura</title>", http.StatusOK},
 		{"aws", "/provider.svg", "image/svg+xml", `width="1"`, http.StatusOK},
+		{"aws", "/healthz", "text/plain; charset=utf-8", "", http.StatusOK},
 		{"aws", "/missing", "", "", http.StatusNotFound},
 		{"google-cloud", "/", "text/html; charset=utf-8", "<title>Tsujiura</title>", http.StatusOK},
 		{"google-cloud", "/provider.svg", "image/svg+xml", `width="2"`, http.StatusOK},
+		{"google-cloud", "/healthz", "text/plain; charset=utf-8", "", http.StatusOK},
 		{"google-cloud", "/missing", "", "", http.StatusNotFound},
 	}
 	for _, tt := range tests {
