@@ -281,6 +281,45 @@
       font-weight: 700;
     }
 
+    .progress {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem 1rem;
+    }
+
+    .progress p {
+      flex: none;
+    }
+
+    #progress-count {
+      font-family: var(--font-display);
+      font-variant-numeric: tabular-nums;
+    }
+
+    progress {
+      flex: 1;
+      min-width: 0;
+      height: 1rem;
+      border: 2px solid var(--label);
+      border-radius: 999px;
+      background: var(--bg);
+      overflow: hidden;
+      appearance: none;
+    }
+
+    progress::-webkit-progress-bar {
+      background: var(--bg);
+    }
+
+    progress::-webkit-progress-value {
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    progress::-moz-progress-bar {
+      background: var(--accent);
+    }
+
     footer {
       width: min(100%, 64rem);
       margin: 0 auto;
@@ -362,7 +401,7 @@
       }
     }
 
-    async function measure() {
+    async function measure(onFinish) {
       const tokens = Array.from({ length: TOKEN_COUNT }, () => crypto.randomUUID());
       const deadline = Date.now() + POLL_TIMEOUT_MS;
       const run = { stopped: false };
@@ -370,6 +409,7 @@
         return await Promise.all(
           tokens.map(async (token) => {
             const [answeredBy, result] = await Promise.all([probeToken(token, deadline), pollToken(token, deadline, run)]);
+            onFinish();
             return { answeredBy, ...result };
           }),
         );
@@ -465,8 +505,16 @@
     }
 
     const output = document.getElementById("result");
+    const progress = document.getElementById("progress");
+    const progressCount = document.getElementById("progress-count");
+    progress.max = TOKEN_COUNT;
+    progressCount.textContent = `0 / ${TOKEN_COUNT}`;
+    const finishToken = () => {
+      progress.value += 1;
+      progressCount.textContent = `${progress.value} / ${TOKEN_COUNT}`;
+    };
     try {
-      output.replaceChildren(...summarize(await measure()));
+      output.replaceChildren(...summarize(await measure(finishToken)));
     } catch {
       output.replaceChildren(element("p", MEASURE_FAILED, "message"));
     }
@@ -477,7 +525,12 @@
     <h1>Tsujiura</h1>
     <section class="card" aria-labelledby="result-heading">
       <h2 id="result-heading">計測結果</h2>
-      <div id="result" aria-live="polite"><p>計測中</p></div>
+      <div id="result" aria-live="polite">
+        <div class="progress">
+          <p id="progress-label">計測中 <span id="progress-count"></span></p>
+          <progress id="progress" value="0" aria-labelledby="progress-label"></progress>
+        </div>
+      </div>
     </section>
   </main>
   <footer>
