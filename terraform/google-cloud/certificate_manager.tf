@@ -54,3 +54,12 @@ resource "google_certificate_manager_certificate_map_entry" "frontend_wildcard" 
 
   labels = local.common_labels
 }
+
+resource "google_certificate_manager_certificate_map_entry" "frontend_primary" {
+  name         = "tsujiura-frontend-primary"
+  map          = google_certificate_manager_certificate_map.frontend.name
+  matcher      = "PRIMARY"
+  certificates = [google_certificate_manager_certificate.frontend.id]
+
+  labels = local.common_labels
+}
