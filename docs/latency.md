@@ -18,7 +18,7 @@ Route53のクエリログがLambdaに届くまでの遅延を測る。
 
 ### 手順
 
-`terraform apply` と `just deploy aws` のあとに、`nix develop` の中で実行する。
+`terraform apply` と `just deploy` のあとに、`nix develop` の中で実行する。
 
 ```sh
 export RESULTS_TABLE_NAME=<テーブル名>
@@ -49,7 +49,7 @@ Cloud DNSのクエリログがCloud Run functionsに届くまでの遅延を測�
 
 `scripts/measure-cloud-dns-latency.sh` は、トークンの名前をCloud DNSのネームサーバーへ直接問い合わせ、取り込み関数が書いたFirestoreのドキュメントの `createTime` と送信時刻の差を出す。
 
-1. Terraformのapplyと `just deploy google-cloud` を済ませる
+1. Terraformのapplyと `just deploy` を済ませる
 2. `timedatectl` で手元の時計が同期していることを確かめる
 3. `GOOGLE_CLOUD_PROJECT` を設定し、Cloud DNSのネームサーバーを1本指定して実行する
 
