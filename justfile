@@ -56,7 +56,7 @@ _deploy-google-cloud:
     trap 'rm -rf "$ingest_source_dir" "$result_api_source_dir" "$frontend_source_dir"' EXIT
     cp -r go.mod go.sum internal functions/ingest-cloud-dns/. "$ingest_source_dir"
     cp -r go.mod go.sum internal functions/result-api/. "$result_api_source_dir"
-    cp -r go.mod go.sum web functions/frontend/. "$frontend_source_dir"
+    cp -r go.mod go.sum internal web functions/frontend/. "$frontend_source_dir"
     gcloud functions deploy tsujiura-ingest-cloud-dns \
       --gen2 \
       --region=asia-northeast1 \
