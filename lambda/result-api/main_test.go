@@ -27,7 +27,7 @@ func (unreadable) Get(context.Context, string) (*result.Record, error) {
 }
 
 func TestHandleAnswersFirestoreUnavailable(t *testing.T) {
-	request := events.ALBTargetGroupRequest{QueryStringParameters: map[string]string{"token": "550e8400-e29b-41d4-a716-446655440000"}}
+	request := events.ALBTargetGroupRequest{QueryStringParameters: map[string]string{"tokens": "550e8400-e29b-41d4-a716-446655440000"}}
 	got, err := api{result.Aggregator{DynamoDB: reader{}, Firestore: unreadable{}}}.handle(context.Background(), request)
 	if err != nil {
 		t.Fatal(err)

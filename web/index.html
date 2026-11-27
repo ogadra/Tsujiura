@@ -436,8 +436,8 @@
       });
     }
 
-    async function fetchResult(token) {
-      const response = await fetch(`/api/result?token=${token}`);
+    async function fetchResults(tokens) {
+      const response = await fetch(`/api/result?tokens=${tokens.join(",")}`);
       try {
         return { status: response.status, body: await response.json() };
       } catch (error) {
@@ -445,36 +445,45 @@
       }
     }
 
-    async function pollToken(token, deadline, run) {
-      for (;;) {
-        const result = await fetchResult(token);
-        const recorded = result.body.route53 || result.body.cloudDns;
-        run.stopped ||= result.status !== 200;
-        if (run.stopped || recorded || Date.now() + POLL_INTERVAL_MS >= deadline) {
-          return { token, ...result };
+    function pollTokens(tokens, deadline) {
+      const settled = new Map(tokens.map((token) => [token, Promise.withResolvers()]));
+      (async () => {
+        let pending = tokens;
+        for (;;) {
+          const result = await fetchResults(pending);
+          const last = result.status !== 200 || Date.now() + POLL_INTERVAL_MS >= deadline;
+          pending = pending.filter((token) => {
+            const body = result.status === 200 ? result.body[token] : result.body;
+            if (last || body.route53 || body.cloudDns) {
+              settled.get(token).resolve({ token, status: result.status, body });
+              return false;
+            }
+            return true;
+          });
+          if (pending.length === 0) {
+            return;
+          }
+          await sleep(POLL_INTERVAL_MS);
         }
-        await sleep(POLL_INTERVAL_MS);
-        if (run.stopped) {
-          return { token, ...result };
+      })().catch((error) => {
+        for (const { reject } of settled.values()) {
+          reject(error);
         }
-      }
+      });
+      return tokens.map((token) => settled.get(token).promise);
     }
 
     async function measure(onFinish) {
       const tokens = Array.from({ length: TOKEN_COUNT }, () => crypto.randomUUID());
       const deadline = Date.now() + POLL_TIMEOUT_MS;
-      const run = { stopped: false };
-      try {
-        return await Promise.all(
-          tokens.map(async (token) => {
-            const [, result] = await Promise.all([probeToken(token, deadline), pollToken(token, deadline, run)]);
-            onFinish();
-            return result;
-          }),
-        );
-      } finally {
-        run.stopped = true;
-      }
+      const polls = pollTokens(tokens, deadline);
+      return Promise.all(
+        tokens.map(async (token, i) => {
+          const [, result] = await Promise.all([probeToken(token, deadline), polls[i]]);
+          onFinish();
+          return result;
+        }),
+      );
     }
 
     function element(tag, text, className) {

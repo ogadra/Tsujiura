@@ -3,10 +3,12 @@ package result
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,7 +18,10 @@ import (
 	"github.com/ogadra/Tsujiura/internal/querylog"
 )
 
-const readTimeout = 3 * time.Second
+const (
+	readTimeout = 3 * time.Second
+	MaxTokens   = 10
+)
 
 type Record struct {
 	ASN          int64  `json:"asn,omitempty" firestore:"asn"`
@@ -45,26 +50,30 @@ type Invalid struct {
 	Error string `json:"error"`
 }
 
-func (a Aggregator) Respond(ctx context.Context, token string) (int, []byte) {
-	if !querylog.IsToken(token) {
-		return encode(http.StatusBadRequest, Invalid{Error: "invalid token"})
+func (a Aggregator) Respond(ctx context.Context, query string) (int, []byte) {
+	tokens, ok := parseTokens(query)
+	if !ok {
+		return encode(http.StatusBadRequest, Invalid{Error: "invalid tokens"})
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, readTimeout)
 	defer cancel()
 
-	var found Found
-	var dynamoDBErr, firestoreErr error
+	found := make([]Found, len(tokens))
+	dynamoDBErrs := make([]error, len(tokens))
+	firestoreErrs := make([]error, len(tokens))
 	var wg sync.WaitGroup
-	wg.Go(func() { found.Route53, dynamoDBErr = a.DynamoDB.Get(ctx, token) })
-	wg.Go(func() { found.CloudDNS, firestoreErr = a.Firestore.Get(ctx, token) })
+	for i, token := range tokens {
+		wg.Go(func() { found[i].Route53, dynamoDBErrs[i] = a.DynamoDB.Get(ctx, token) })
+		wg.Go(func() { found[i].CloudDNS, firestoreErrs[i] = a.Firestore.Get(ctx, token) })
+	}
 	wg.Wait()
 
 	var unavailable []string
 	for _, read := range []struct {
 		database string
 		err      error
-	}{{"DynamoDB", dynamoDBErr}, {"Firestore", firestoreErr}} {
+	}{{"DynamoDB", errors.Join(dynamoDBErrs...)}, {"Firestore", errors.Join(firestoreErrs...)}} {
 		if read.err != nil {
 			slog.ErrorContext(ctx, "read result", "database", read.database, "error", read.err)
 			unavailable = append(unavailable, read.database)
@@ -73,11 +82,30 @@ func (a Aggregator) Respond(ctx context.Context, token string) (int, []byte) {
 	if unavailable != nil {
 		return encode(http.StatusServiceUnavailable, Unavailable{Databases: unavailable})
 	}
-	return encode(http.StatusOK, found)
+	results := make(map[string]Found, len(tokens))
+	for i, token := range tokens {
+		results[token] = found[i]
+	}
+	return encode(http.StatusOK, results)
+}
+
+func parseTokens(query string) ([]string, bool) {
+	tokens := strings.Split(query, ",")
+	if len(tokens) > MaxTokens {
+		return nil, false
+	}
+	seen := make(map[string]bool, len(tokens))
+	for _, token := range tokens {
+		if !querylog.IsToken(token) || seen[token] {
+			return nil, false
+		}
+		seen[token] = true
+	}
+	return tokens, true
 }
 
 func (a Aggregator) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	status, body := a.Respond(r.Context(), r.URL.Query().Get("token"))
+	status, body := a.Respond(r.Context(), r.URL.Query().Get("tokens"))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if _, err := w.Write(body); err != nil {
