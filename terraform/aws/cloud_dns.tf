@@ -5,7 +5,17 @@ resource "google_dns_record_set" "tsujiura_apex_a" {
   type         = "A"
   ttl          = 10
 
-  rrdatas = local.frontend_a_rrset
+  routing_policy {
+    health_check = google_compute_health_check.tsujiura_frontend.id
+
+    geo {
+      location = "asia-northeast1"
+
+      health_checked_targets {
+        external_endpoints = values(local.frontend_ips)
+      }
+    }
+  }
 }
 
 resource "google_dns_record_set" "tsujiura_wildcard_a" {
@@ -15,7 +25,17 @@ resource "google_dns_record_set" "tsujiura_wildcard_a" {
   type         = "A"
   ttl          = 10
 
-  rrdatas = local.frontend_a_rrset
+  routing_policy {
+    health_check = google_compute_health_check.tsujiura_frontend.id
+
+    geo {
+      location = "asia-northeast1"
+
+      health_checked_targets {
+        external_endpoints = values(local.frontend_ips)
+      }
+    }
+  }
 }
 
 resource "google_dns_record_set" "tsujiura_acm_validation" {

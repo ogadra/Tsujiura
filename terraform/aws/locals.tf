@@ -1,9 +1,9 @@
 locals {
   domain_name = "tsujiura.ogadra.net"
 
-  frontend_a_rrset = concat(
-    aws_globalaccelerator_accelerator.tsujiura.ip_sets[0].ip_addresses,
-    [data.google_compute_global_address.frontend.address],
+  frontend_ips = merge(
+    { for index, ip in aws_globalaccelerator_accelerator.tsujiura.ip_sets[0].ip_addresses : "aws-${index}" => ip },
+    { "google-cloud" = data.google_compute_global_address.frontend.address },
   )
 
   # ACM gives the apex and the wildcard the same validation record.
