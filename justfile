@@ -1,3 +1,5 @@
+repo := parent_directory(`git rev-parse --path-format=absolute --git-common-dir`)
+
 update-asn:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -12,44 +14,84 @@ update-asn:
 deploy cloud:
     @"{{just_executable()}}" "_deploy-{{cloud}}"
 
-_deploy-aws:
+_deploy-all: _push-aws
     #!/usr/bin/env bash
     set -euo pipefail
-    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
-    ingest_repository="$(terraform -chdir=terraform/aws output -raw ingest_route53_repository_url)"
-    result_api_repository="$(terraform -chdir=terraform/aws output -raw result_api_repository_url)"
-    frontend_repository="$(terraform -chdir=terraform/aws output -raw frontend_repository_url)"
-    export IMAGE_TAG="$(git rev-parse --short HEAD)"
+    "{{just_executable()}}" _switch-aws &
+    aws_pid=$!
+    "{{just_executable()}}" _deploy-google-cloud &
+    google_cloud_pid=$!
+    aws_status=0
+    wait "$aws_pid" || aws_status=$?
+    google_cloud_status=0
+    wait "$google_cloud_pid" || google_cloud_status=$?
+    echo "aws=$aws_status google-cloud=$google_cloud_status"
+    if [ "$aws_status" -ne 0 ]; then
+      echo "Deploying to AWS failed; fix the error above, then run direnv exec {{repo}} just -f {{justfile()}} deploy aws" >&2
+    fi
+    if [ "$google_cloud_status" -ne 0 ]; then
+      echo "Deploying to Google Cloud failed; fix the error above, then run direnv exec {{repo}} just -f {{justfile()}} deploy google-cloud" >&2
+    fi
+    test "$aws_status" -eq 0 && test "$google_cloud_status" -eq 0
+
+_deploy-aws: _push-aws _switch-aws
+
+_push-aws:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${TF_BACKEND_BUCKET:?Set TF_BACKEND_BUCKET in .env and run just through direnv exec {{repo}}}"
+    ingest_repository="$(terraform -chdir={{repo}}/terraform/aws output -raw ingest_route53_repository_url)"
+    result_api_repository="$(terraform -chdir={{repo}}/terraform/aws output -raw result_api_repository_url)"
+    frontend_repository="$(terraform -chdir={{repo}}/terraform/aws output -raw frontend_repository_url)"
+    image_tag="$(git rev-parse --short HEAD)"
     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${ingest_repository%%/*}"
-    docker build --platform linux/amd64 --provenance=false -f lambda/ingest-route53/Dockerfile -t "$ingest_repository:$IMAGE_TAG" .
-    docker push "$ingest_repository:$IMAGE_TAG"
-    lambroll deploy --function lambda/ingest-route53/function.json --region us-east-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
+    docker build --platform linux/amd64 --provenance=false -f lambda/ingest-route53/Dockerfile -t "$ingest_repository:$image_tag" .
+    docker push "$ingest_repository:$image_tag"
     aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${result_api_repository%%/*}"
-    docker build --platform linux/amd64 --provenance=false -f lambda/result-api/Dockerfile -t "$result_api_repository:$IMAGE_TAG" .
-    docker push "$result_api_repository:$IMAGE_TAG"
-    export GOOGLE_CLOUD_PROJECT="$(terraform -chdir=terraform/google-cloud output -raw project_id)"
-    export GOOGLE_WORKLOAD_IDENTITY_AUDIENCE="$(terraform -chdir=terraform/google-cloud output -raw result_api_workload_identity_audience)"
-    export GOOGLE_SERVICE_ACCOUNT="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
-    lambroll deploy --function lambda/result-api/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
+    docker build --platform linux/amd64 --provenance=false -f lambda/result-api/Dockerfile -t "$result_api_repository:$image_tag" .
+    docker push "$result_api_repository:$image_tag"
     aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin "${frontend_repository%%/*}"
-    docker build --platform linux/amd64 --provenance=false -f lambda/frontend/Dockerfile -t "$frontend_repository:$IMAGE_TAG" .
-    docker push "$frontend_repository:$IMAGE_TAG"
-    lambroll deploy --function lambda/frontend/function.json --region ap-northeast-1 --tfstate "s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
+    docker build --platform linux/amd64 --provenance=false -f lambda/frontend/Dockerfile -t "$frontend_repository:$image_tag" .
+    docker push "$frontend_repository:$image_tag"
+
+_switch-aws:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    : "${TF_BACKEND_BUCKET:?Set TF_BACKEND_BUCKET in .env and run just through direnv exec {{repo}}}"
+    tfstate="s3://$TF_BACKEND_BUCKET/tsujiura/aws/terraform.tfstate"
+    IMAGE_TAG="$(git rev-parse --short HEAD)"
+    GOOGLE_CLOUD_PROJECT="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw project_id)"
+    GOOGLE_WORKLOAD_IDENTITY_AUDIENCE="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw result_api_workload_identity_audience)"
+    GOOGLE_SERVICE_ACCOUNT="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw result_api_service_account)"
+    export IMAGE_TAG GOOGLE_CLOUD_PROJECT GOOGLE_WORKLOAD_IDENTITY_AUDIENCE GOOGLE_SERVICE_ACCOUNT
+    lambroll deploy --function lambda/ingest-route53/function.json --region us-east-1 --tfstate "$tfstate" &
+    ingest_pid=$!
+    lambroll deploy --function lambda/result-api/function.json --region ap-northeast-1 --tfstate "$tfstate" &
+    result_api_pid=$!
+    lambroll deploy --function lambda/frontend/function.json --region ap-northeast-1 --tfstate "$tfstate" &
+    frontend_pid=$!
+    failed=()
+    wait "$ingest_pid" || failed+=(tsujiura-ingest-route53)
+    wait "$result_api_pid" || failed+=(tsujiura-result-api)
+    wait "$frontend_pid" || failed+=(tsujiura-frontend)
+    if [ "${#failed[@]}" -ne 0 ]; then
+      echo "lambroll deploy failed for ${failed[*]}; fix the error in the lambroll output above, then run direnv exec {{repo}} just -f {{justfile()}} deploy aws" >&2
+      exit 1
+    fi
 
 _deploy-google-cloud:
     #!/usr/bin/env bash
     set -euo pipefail
-    : "${TF_BACKEND_BUCKET:?TF_BACKEND_BUCKET must be set}"
-    ingest_service_account="$(terraform -chdir=terraform/google-cloud output -raw ingest_cloud_dns_service_account)"
-    trigger_service_account="$(terraform -chdir=terraform/google-cloud output -raw ingest_cloud_dns_trigger_service_account)"
-    topic="$(terraform -chdir=terraform/google-cloud output -raw dns_query_logs_topic)"
-    asn_bucket="$(terraform -chdir=terraform/google-cloud output -raw asn_bucket)"
-    result_api_service_account="$(terraform -chdir=terraform/google-cloud output -raw result_api_service_account)"
-    frontend_service_account="$(terraform -chdir=terraform/google-cloud output -raw frontend_service_account)"
-    build_service_account="$(terraform -chdir=terraform/google-cloud output -raw build_service_account)"
-    results_table_name="$(terraform -chdir=terraform/aws output -raw results_table_name)"
-    results_table_region="$(terraform -chdir=terraform/aws output -raw results_table_region)"
-    role_arn="$(terraform -chdir=terraform/aws output -raw google_cloud_result_api_role_arn)"
+    ingest_service_account="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw ingest_cloud_dns_service_account)"
+    trigger_service_account="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw ingest_cloud_dns_trigger_service_account)"
+    topic="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw dns_query_logs_topic)"
+    asn_bucket="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw asn_bucket)"
+    result_api_service_account="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw result_api_service_account)"
+    frontend_service_account="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw frontend_service_account)"
+    build_service_account="$(terraform -chdir={{repo}}/terraform/google-cloud output -raw build_service_account)"
+    results_table_name="$(terraform -chdir={{repo}}/terraform/aws output -raw results_table_name)"
+    results_table_region="$(terraform -chdir={{repo}}/terraform/aws output -raw results_table_region)"
+    role_arn="$(terraform -chdir={{repo}}/terraform/aws output -raw google_cloud_result_api_role_arn)"
     ingest_source_dir="$(mktemp -d)"
     result_api_source_dir="$(mktemp -d)"
     frontend_source_dir="$(mktemp -d)"
@@ -58,6 +100,7 @@ _deploy-google-cloud:
     cp -r go.mod go.sum internal functions/result-api/. "$result_api_source_dir"
     cp -r go.mod go.sum web functions/frontend/. "$frontend_source_dir"
     gcloud functions deploy tsujiura-ingest-cloud-dns \
+      --quiet \
       --gen2 \
       --region=asia-northeast1 \
       --runtime=go127 \
@@ -69,8 +112,10 @@ _deploy-google-cloud:
       --service-account="$ingest_service_account" \
       --no-allow-unauthenticated \
       --retry \
-      --set-env-vars="FIRESTORE_COLLECTION=results,ASN_BUCKET=$asn_bucket"
+      --set-env-vars="FIRESTORE_COLLECTION=results,ASN_BUCKET=$asn_bucket" &
+    ingest_pid=$!
     gcloud functions deploy tsujiura-result-api \
+      --quiet \
       --gen2 \
       --region=asia-northeast1 \
       --runtime=go127 \
@@ -81,8 +126,10 @@ _deploy-google-cloud:
       --service-account="$result_api_service_account" \
       --no-allow-unauthenticated \
       --ingress-settings=internal-and-gclb \
-      --set-env-vars="FIRESTORE_COLLECTION=results,RESULTS_TABLE_NAME=$results_table_name,RESULTS_TABLE_REGION=$results_table_region,RESULTS_TABLE_ROLE_ARN=$role_arn"
+      --set-env-vars="FIRESTORE_COLLECTION=results,RESULTS_TABLE_NAME=$results_table_name,RESULTS_TABLE_REGION=$results_table_region,RESULTS_TABLE_ROLE_ARN=$role_arn" &
+    result_api_pid=$!
     gcloud functions deploy tsujiura-frontend \
+      --quiet \
       --gen2 \
       --region=asia-northeast1 \
       --runtime=go127 \
@@ -92,7 +139,16 @@ _deploy-google-cloud:
       --trigger-http \
       --service-account="$frontend_service_account" \
       --no-allow-unauthenticated \
-      --ingress-settings=internal-and-gclb
+      --ingress-settings=internal-and-gclb &
+    frontend_pid=$!
+    failed=()
+    wait "$ingest_pid" || failed+=(tsujiura-ingest-cloud-dns)
+    wait "$result_api_pid" || failed+=(tsujiura-result-api)
+    wait "$frontend_pid" || failed+=(tsujiura-frontend)
+    if [ "${#failed[@]}" -ne 0 ]; then
+      echo "gcloud functions deploy failed for ${failed[*]}; fix the error in the gcloud output above, then run direnv exec {{repo}} just -f {{justfile()}} deploy google-cloud" >&2
+      exit 1
+    fi
 
 dns action side:
     #!/usr/bin/env bash
