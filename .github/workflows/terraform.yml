@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         dir:
+          - terraform/dns-cloud-dns
           - terraform/aws
           - terraform/google-cloud
           - terraform/dns-route53
