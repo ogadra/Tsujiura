@@ -1,4 +1,4 @@
-package main
+package ingest
 
 import (
 	"context"
@@ -12,9 +12,9 @@ import (
 
 const asnObjectKey = "GeoLite2-ASN.mmdb"
 
-type objectReader func(ctx context.Context, bucket, key string) ([]byte, error)
+type ObjectReader func(ctx context.Context, bucket, key string) ([]byte, error)
 
-func openASNDB(ctx context.Context, read objectReader, bucket string) (*asn.DB, error) {
+func OpenASNDB(ctx context.Context, read ObjectReader, bucket string) (*asn.DB, error) {
 	data, err := read(ctx, bucket, asnObjectKey)
 	if err != nil {
 		return nil, fmt.Errorf("read s3://%s/%s: %w", bucket, asnObjectKey, err)
@@ -22,7 +22,7 @@ func openASNDB(ctx context.Context, read objectReader, bucket string) (*asn.DB, 
 	return asn.New(data)
 }
 
-func s3ObjectReader(client *s3.Client) objectReader {
+func S3ObjectReader(client *s3.Client) ObjectReader {
 	return func(ctx context.Context, bucket, key string) ([]byte, error) {
 		out, err := client.GetObject(ctx, &s3.GetObjectInput{Bucket: aws.String(bucket), Key: aws.String(key)})
 		if err != nil {

@@ -1,4 +1,4 @@
-package main
+package ingest
 
 import (
 	"bytes"
@@ -30,7 +30,7 @@ func TestOpenASNDBReadsTheObjectFromTheBucket(t *testing.T) {
 		return data, nil
 	}
 
-	if _, err := openASNDB(context.Background(), read, "asn-bucket"); err != nil {
+	if _, err := OpenASNDB(context.Background(), read, "asn-bucket"); err != nil {
 		t.Fatal(err)
 	}
 	if gotBucket != "asn-bucket" || gotKey != "GeoLite2-ASN.mmdb" {
@@ -41,14 +41,14 @@ func TestOpenASNDBReadsTheObjectFromTheBucket(t *testing.T) {
 func TestOpenASNDBFails(t *testing.T) {
 	tests := []struct {
 		name string
-		read objectReader
+		read ObjectReader
 	}{
 		{"unreadable object", func(context.Context, string, string) ([]byte, error) { return nil, errors.New("access denied") }},
 		{"not a database", func(context.Context, string, string) ([]byte, error) { return []byte("not a database"), nil }},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := openASNDB(context.Background(), tt.read, "asn-bucket"); err == nil {
+			if _, err := OpenASNDB(context.Background(), tt.read, "asn-bucket"); err == nil {
 				t.Error("got no error")
 			}
 		})
