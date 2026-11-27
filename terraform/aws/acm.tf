@@ -14,7 +14,7 @@ resource "aws_acm_certificate_validation" "tsujiura" {
   # checkov:skip=CKV_TSUJIURA_1:Resource does not support tags
   certificate_arn = aws_acm_certificate.tsujiura.arn
 
-  validation_record_fqdns = [aws_route53_record.tsujiura_acm_validation.fqdn]
+  validation_record_fqdns = [trimsuffix(local.acm_validation_record.name, ".")]
 
-  depends_on = [google_dns_record_set.tsujiura_acm_validation]
+  depends_on = [aws_route53_record.tsujiura_acm_validation, google_dns_record_set.tsujiura_acm_validation]
 }
