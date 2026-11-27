@@ -216,6 +216,28 @@
       background: var(--accent);
     }
 
+    #tally {
+      margin: 0.75rem 0 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 0.75rem;
+      font-size: clamp(0.875rem, 3.4vw, 1.0625rem);
+    }
+
+    .tally {
+      padding: 0.25rem 0.875rem;
+      border-radius: 999px;
+      background: var(--provider);
+      color: var(--provider-text);
+      font-family: var(--font-display);
+      font-weight: 700;
+    }
+
+    .tally-count {
+      margin-left: 0.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+
     #result {
       font-size: clamp(0.875rem, 3.4vw, 1.0625rem);
       font-weight: 500;
@@ -236,12 +258,6 @@
       margin-inline: calc(-1 * var(--column-gap));
       border-collapse: separate;
       border-spacing: var(--column-gap) 0;
-    }
-
-    caption {
-      margin-bottom: 0.5rem;
-      font-weight: 700;
-      text-align: center;
     }
 
     th,
@@ -473,13 +489,19 @@
       return tokens.map((token) => settled.get(token).promise);
     }
 
-    async function measure(onFinish) {
+    async function measure(onFinish, onResult) {
       const tokens = Array.from({ length: TOKEN_COUNT }, () => crypto.randomUUID());
       const deadline = Date.now() + POLL_TIMEOUT_MS;
       const polls = pollTokens(tokens, deadline);
       return Promise.all(
         tokens.map(async (token, i) => {
-          const [, result] = await Promise.all([probeToken(token, deadline), polls[i]]);
+          const [, result] = await Promise.all([
+            probeToken(token, deadline),
+            polls[i].then((result) => {
+              onResult(result);
+              return result;
+            }),
+          ]);
           onFinish();
           return result;
         }),
@@ -495,11 +517,8 @@
       return node;
     }
 
-    function table(caption, head, rows) {
+    function table(head, rows) {
       const node = document.createElement("table");
-      if (caption) {
-        node.createCaption().textContent = caption;
-      }
       const headRow = node.createTHead().insertRow();
       for (const label of head) {
         const cell = element("th", label.text ?? label, label.className);
@@ -532,9 +551,9 @@
 
     function providersTable(rows) {
       if (rows.some((row) => row[3])) {
-        return table("権威 DNS", ["", ROUTE53_HEAD, CLOUD_DNS_HEAD, ""], rows.map((row) => [...row.slice(0, 3), row[3] ?? { text: "" }]));
+        return table(["", ROUTE53_HEAD, CLOUD_DNS_HEAD, ""], rows.map((row) => [...row.slice(0, 3), row[3] ?? { text: "" }]));
       }
-      return table("権威 DNS", ["", ROUTE53_HEAD, CLOUD_DNS_HEAD], rows.map((row) => row.slice(0, 3)));
+      return table(["", ROUTE53_HEAD, CLOUD_DNS_HEAD], rows.map((row) => row.slice(0, 3)));
     }
 
     function resolverRows(results) {
@@ -573,6 +592,7 @@
       document.getElementById("result").replaceChildren(...nodes);
       document.getElementById("result-card").hidden = false;
       document.getElementById("status").remove();
+      document.getElementById("tally").remove();
     }
 
     const progress = document.getElementById("progress");
@@ -584,8 +604,19 @@
       progressCount.textContent = `${progress.value} / ${TOKEN_COUNT}`;
     };
 
+    const tally = { route53: 0, cloudDns: 0 };
+    const tallyCounts = { route53: document.getElementById("tally-route53"), cloudDns: document.getElementById("tally-cloud-dns") };
+    const tallyResult = (result) => {
+      for (const provider of ["route53", "cloudDns"]) {
+        if (result.body[provider]) {
+          tally[provider] += 1;
+          tallyCounts[provider].textContent = `${tally[provider]}件`;
+        }
+      }
+    };
+
     try {
-      show(summarize(await measure(finishToken)));
+      show(summarize(await measure(finishToken, tallyResult)));
     } catch (error) {
       show([element("p", MEASURE_FAILED, "message"), element("p", error.message, "detail")]);
     }
@@ -596,6 +627,7 @@
     <h1>Tsujiura</h1>
     <div aria-live="polite">
       <p id="status"><span id="progress-label">計測中 <span id="progress-count"></span></span><progress id="progress" value="0" aria-labelledby="progress-label"></progress></p>
+      <p id="tally"><span class="tally route53">Route53 <span id="tally-route53" class="tally-count">0件</span></span><span class="tally cloud-dns">Cloud DNS <span id="tally-cloud-dns" class="tally-count">0件</span></span></p>
       <section id="result-card" class="card" aria-labelledby="result-heading" hidden>
         <h2 id="result-heading">計測結果</h2>
         <div id="result"></div>
