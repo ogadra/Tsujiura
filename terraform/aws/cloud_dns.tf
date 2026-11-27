@@ -47,3 +47,13 @@ resource "google_dns_record_set" "tsujiura_acm_validation" {
 
   rrdatas = [local.acm_validation_record.value]
 }
+
+resource "google_dns_record_set" "tsujiura_soa" {
+  # checkov:skip=CKV_TSUJIURA_2:Resource does not support labels
+  managed_zone = data.google_dns_managed_zone.tsujiura.name
+  name         = data.google_dns_managed_zone.tsujiura.dns_name
+  type         = "SOA"
+  ttl          = 10
+
+  rrdatas = ["ns-cloud-b1.googledomains.com. cloud-dns-hostmaster.google.com. 1 21600 3600 259200 10"]
+}
