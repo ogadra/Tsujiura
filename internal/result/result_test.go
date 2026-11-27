@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -79,6 +80,15 @@ func TestRespondNamesHangingDatabase(t *testing.T) {
 	}
 	if want := `{"unavailable":["Firestore"]}`; string(body) != want {
 		t.Errorf("body = %s, want %s", body, want)
+	}
+}
+
+func TestServeHTTPAnswersWithTokenFromQuery(t *testing.T) {
+	w := httptest.NewRecorder()
+	Aggregator{DynamoDB: reader{err: errors.New("read failed")}, Firestore: reader{}}.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/api/result?token="+token, nil))
+
+	if w.Code != http.StatusServiceUnavailable || w.Header().Get("Content-Type") != "application/json" || w.Body.String() != `{"unavailable":["DynamoDB"]}` {
+		t.Errorf("got %d %v %s", w.Code, w.Header(), w.Body)
 	}
 }
 

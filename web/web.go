@@ -45,6 +45,7 @@ func Handler(provider string) (http.Handler, error) {
 	return site{
 		"/":             {index.Bytes(), "text/html; charset=utf-8"},
 		"/provider.svg": {svg, "image/svg+xml"},
+		"/healthz":      {nil, "text/plain; charset=utf-8"},
 	}, nil
 }
 

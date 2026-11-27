@@ -32,21 +32,17 @@ func (googleIDToken) GetIdentityToken() ([]byte, error) {
 	return []byte(token), nil
 }
 
-type api struct {
-	respond func(ctx context.Context, token string) (int, []byte)
-}
-
-var defaultAPI = sync.OnceValues(newAPI)
+var defaultAggregator = sync.OnceValues(newAggregator)
 
 func init() {
 	functions.HTTP("ResultAPI", func(w http.ResponseWriter, r *http.Request) {
-		a, err := defaultAPI()
+		a, err := defaultAggregator()
 		if err != nil {
 			slog.ErrorContext(r.Context(), "create result api", "error", err)
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		a.handle(w, r)
+		a.ServeHTTP(w, r)
 	})
 }
 
@@ -55,39 +51,30 @@ func newDynamoDB(roleARN, region string) *dynamodb.Client {
 	return dynamodb.New(dynamodb.Options{Region: region, Credentials: aws.NewCredentialsCache(provider)})
 }
 
-func newAPI() (*api, error) {
+func newAggregator() (result.Aggregator, error) {
 	collection := os.Getenv("FIRESTORE_COLLECTION")
 	if collection == "" {
-		return nil, errors.New("FIRESTORE_COLLECTION is not set")
+		return result.Aggregator{}, errors.New("FIRESTORE_COLLECTION is not set")
 	}
 	table := os.Getenv("RESULTS_TABLE_NAME")
 	if table == "" {
-		return nil, errors.New("RESULTS_TABLE_NAME is not set")
+		return result.Aggregator{}, errors.New("RESULTS_TABLE_NAME is not set")
 	}
 	region := os.Getenv("RESULTS_TABLE_REGION")
 	if region == "" {
-		return nil, errors.New("RESULTS_TABLE_REGION is not set")
+		return result.Aggregator{}, errors.New("RESULTS_TABLE_REGION is not set")
 	}
 	roleARN := os.Getenv("RESULTS_TABLE_ROLE_ARN")
 	if roleARN == "" {
-		return nil, errors.New("RESULTS_TABLE_ROLE_ARN is not set")
+		return result.Aggregator{}, errors.New("RESULTS_TABLE_ROLE_ARN is not set")
 	}
 	client, err := firestore.NewClient(context.Background(), firestore.DetectProjectID)
 	if err != nil {
-		return nil, fmt.Errorf("create firestore client: %w", err)
+		return result.Aggregator{}, fmt.Errorf("create firestore client: %w", err)
 	}
 
-	return &api{respond: result.Aggregator{
+	return result.Aggregator{
 		DynamoDB:  result.DynamoDB{GetItem: newDynamoDB(roleARN, region).GetItem, Table: table},
 		Firestore: result.Firestore{Results: client.Collection(collection)},
-	}.Respond}, nil
-}
-
-func (a *api) handle(w http.ResponseWriter, r *http.Request) {
-	status, body := a.respond(r.Context(), r.URL.Query().Get("token"))
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if _, err := w.Write(body); err != nil {
-		slog.ErrorContext(r.Context(), "write response", "error", err)
-	}
+	}, nil
 }
