@@ -30,7 +30,7 @@ func googleCredentials(audience, serviceAccount string) *externalaccount.Options
 type api struct{ result.Aggregator }
 
 func (a api) handle(ctx context.Context, request events.ALBTargetGroupRequest) (events.ALBTargetGroupResponse, error) {
-	status, body := a.Respond(ctx, request.QueryStringParameters["token"])
+	status, body := a.Respond(ctx, request.QueryStringParameters["tokens"])
 	return events.ALBTargetGroupResponse{
 		StatusCode:        status,
 		StatusDescription: fmt.Sprintf("%d %s", status, http.StatusText(status)),
