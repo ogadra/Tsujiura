@@ -215,3 +215,69 @@ dns action side:
         fi
       fi
     fi
+
+lb action side:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s inherit_errexit
+    case "{{action}}" in
+      down | up) ;;
+      *) echo "action must be down or up" >&2; exit 1 ;;
+    esac
+    case "{{side}}" in
+      aws) other=google-cloud ;;
+      google-cloud) other=aws ;;
+      *) echo "side must be aws or google-cloud" >&2; exit 1 ;;
+    esac
+    aws_region="ap-northeast-1"
+    google_cloud_region="asia-northeast1"
+    backend_services=(tsujiura-frontend tsujiura-result-api)
+    aws_listener() {
+      local lb_arn
+      lb_arn="$(aws elbv2 describe-load-balancers --region "$aws_region" --names tsujiura --query 'LoadBalancers[0].LoadBalancerArn' --output text)"
+      aws elbv2 describe-listeners --region "$aws_region" --load-balancer-arn "$lb_arn" --query 'Listeners[?Port==`443`].ListenerArn' --output text
+    }
+    aws_down_rule() {
+      aws elbv2 describe-rules --region "$aws_region" --listener-arn "$(aws_listener)" --query "Rules[?Priority=='1'].RuleArn" --output text
+    }
+    google_cloud_backends() {
+      gcloud compute backend-services describe tsujiura-frontend --global --format='value(backends[].group)'
+    }
+    is_up() {
+      if [ "$1" = aws ]; then
+        [ -z "$(aws_down_rule)" ]
+      else
+        [ -n "$(google_cloud_backends)" ]
+      fi
+    }
+    if [ "{{action}}" = down ]; then
+      if ! is_up "$other"; then
+        echo "The $other LB is down; bring it up before taking {{side}} down" >&2
+        exit 1
+      fi
+      if ! is_up "{{side}}"; then
+        echo "The {{side}} LB is already down" >&2
+        exit 1
+      fi
+      if [ "{{side}}" = aws ]; then
+        aws elbv2 create-rule --region "$aws_region" --listener-arn "$(aws_listener)" --priority 1 \
+          --conditions 'Field=path-pattern,PathPatternConfig={Values=["/*"]}' \
+          --actions 'Type=fixed-response,FixedResponseConfig={StatusCode=503,ContentType=text/plain,MessageBody=Service Unavailable}'
+      else
+        for service in "${backend_services[@]}"; do
+          gcloud compute backend-services remove-backend "$service" --global --network-endpoint-group="$service" --network-endpoint-group-region="$google_cloud_region"
+        done
+      fi
+    else
+      if is_up "{{side}}"; then
+        echo "The {{side}} LB is already up" >&2
+        exit 1
+      fi
+      if [ "{{side}}" = aws ]; then
+        aws elbv2 delete-rule --region "$aws_region" --rule-arn "$(aws_down_rule)"
+      else
+        for service in "${backend_services[@]}"; do
+          gcloud compute backend-services add-backend "$service" --global --network-endpoint-group="$service" --network-endpoint-group-region="$google_cloud_region"
+        done
+      fi
+    fi
